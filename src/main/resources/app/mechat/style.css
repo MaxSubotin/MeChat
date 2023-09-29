@@ -1,0 +1,22 @@
+.scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-padding: 0px;
+    -fx-pref-height: 5px; /* Adjust the height to make the scroll bar smaller */
+}
+
+.scroll-pane .scroll-bar:vertical .increment-button,
+.scroll-pane .scroll-bar:vertical .decrement-button {
+    -fx-padding: 0px;
+    -fx-min-height: 0;
+    -fx-min-width: 0;
+    -fx-pref-height: 0; /* Set the height of the buttons to 0 to remove them */
+    -fx-opacity: 0; /* Hide the buttons */
+}
+
+.scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: #888; /* Change this to the color you want */
+    -fx-background-radius: 2px; /* Adjust the radius as needed */
+    -fx-min-height: 5px; /* Adjust the height to make the thumb slim */
+    -fx-max-height: 5px; /* Adjust the height to make the thumb slim */
+    -fx-padding: 0px; /* Reset the padding for the thumb */
+}
