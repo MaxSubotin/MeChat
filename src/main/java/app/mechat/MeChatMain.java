@@ -27,26 +27,19 @@ public class MeChatMain extends Application {
         mainViewController.openLoginTab();
     }
 
-    public static void main(String[] args) throws IOException {
-
-//        int port = 8887; // 843 flash policy port
-//        try {
-//            port = Integer.parseInt(args[0]);
-//        } catch (Exception ex) {}
-//
-//        ChatServer s = new ChatServer(port);
-//        s.start();
-//        System.out.println("ChatServer started on port: " + s.getPort());
+    public static void main(String[] args) {
+//        String location;
+//        if (args.length != 0) {
+//            location = args[0];
+//            System.out.println("Default server url specified: \'" + location + "\'");
+//        } else {
+//            location = "ws://localhost:8887";
+//            System.out.println("Default server url not specified: defaulting to \'" + location + "\'");
+//        }
+//        new ChatClient(location); // cant be here
 
         launch();
+        // learn how to open 2 gui apps with 2 threads here to test if it works maybe? or just user visual studio code
     }
 
 }
-
-
-// TO-DO List
-//
-// * create a database
-// * add database methods for sending messages
-// * add websockets
-//

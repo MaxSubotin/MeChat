@@ -1,5 +1,6 @@
 package app.mechat;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -10,9 +11,14 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.drafts.Draft;
+import org.java_websocket.handshake.ServerHandshake;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,6 +31,9 @@ public class MainViewController {
     private Pane selectedChatBoxPane;
     private String selectedChatBoxName;
     private int newChatBoxCounter = 0;
+    private CustomWebSocketClient webSocketClient;
+    private Message message = null;
+
 
     @FXML
     ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView;
@@ -69,41 +78,29 @@ public class MainViewController {
 
     @FXML
     public void sendMessageButtonOnClick() {
-        chatScrollPane.setVvalue(1.0); // scrolls down
+        chatScrollPane.setVvalue(1.0); // Scrolls down
 
-        // Getting the text that the user inputted
+        // Check message
         String text = messageTextField.getText();
         if (text == null || text.isEmpty()) return;
 
-        // Creating a new message bubble on the screen and adding the users text into it
-        try {
-            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("chatBubble.fxml"));
-            HBox chatBubble = fxmlLoader.load();
-            chatBubble.setAlignment(Pos.CENTER_RIGHT); // The users messages appear of the right side
+        // Get current timestamp
+        LocalDateTime currentTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedTime = currentTime.format(formatter);
 
-            // Get current timestamp
-            LocalDateTime currentTime = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String formattedTime = currentTime.format(formatter);
+        // Create a message object and the controller to access methods
+        message = new Message(text, MyUser.getName(), formattedTime);
 
-            // Create a message object and the controller to access methods
-            Message message = new Message(text, MyUser.getName(), formattedTime);
+        // Send the message text to all users of the chat
+        webSocketClient.send(message.getText());
 
-            ChatBubbleController controller = fxmlLoader.getController();
-            controller.setMessageBubbleLabel(text);
-            controller.setMessageBubbleLabelColorBlue(); // The users messages are colored sky-blue
-            controller.setMessage(message);
+        // Add the message to the database
+        String[] splitChatBoxName = this.getSelectedChatBoxPane().getId().split("_");
+        Database.addMessageToDatabase(message, Integer.parseInt(splitChatBoxName[1]));
 
-            // Add message bubble to the screen and to the database
-            chatVBox.getChildren().add(chatBubble);
-            String[] splitChatBoxName = this.getSelectedChatBoxPane().getId().split("_");
-            Database.addMessageToDatabase(message, Integer.parseInt(splitChatBoxName[1]));
-
-            messageTextField.clear(); // Removing the text from the textfield
-            getFocus();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        messageTextField.clear(); // Removing the text from the textfield
+        getFocus();
     }
 
     @FXML
@@ -123,10 +120,58 @@ public class MainViewController {
         if (user != null) MyUser = user;
         else return;
 
+        // Initialize the client web socket
+        try {
+            webSocketClient = new CustomWebSocketClient(new URI("ws://localhost:8887"), MyUser.getName()) {
+
+                @Override
+                public void onMessage(String text) {
+                    Platform.runLater(() -> {
+                        try {
+                            // Creating a new message bubble on the screen and adding the users text into it
+                            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("chatBubble.fxml"));
+                            HBox chatBubble = fxmlLoader.load();
+
+                            ChatBubbleController controller = fxmlLoader.getController();
+                            controller.setMessageBubbleLabel(text);
+                            controller.setMessage(message);
+
+                            if (message != null) {
+                                chatBubble.setAlignment(Pos.CENTER_RIGHT); // The users messages appear of the right side
+                                controller.setMessageBubbleLabelColorBlue(); // The users messages are colored sky-blue
+                                message = null; // nullify the current message after it is sent to get the app ready for the next message broadcast
+                            } else
+                                chatBubble.setAlignment(Pos.CENTER_LEFT);
+
+                            // Add message bubble to the screen
+                            chatVBox.getChildren().add(chatBubble);
+
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
+
+            };
+
+            webSocketClient.connect();
+
+        } catch (URISyntaxException ex) {
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Not a valid WebSocket URI\n" + ex);
+                alert.showAndWait();
+            });
+            return;
+        }
+
         // Show the USER tab and show users chats
         showUserTab();
         addUsersChatsToScreen();
         cleanLoginForm();
+
     }
 
     @FXML
