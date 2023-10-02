@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.UUID;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
+
 public class MainViewController {
 
     public User MyUser = null;
@@ -188,13 +190,11 @@ public class MainViewController {
             Database.addSessionToDataBase(MyUser.getName(), session); // adding the connecting to the database to keep track of connected users
 
         } catch (URISyntaxException ex) {
-            Platform.runLater(() -> {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText(null);
-                alert.setContentText("Not a valid WebSocket URI\n" + ex);
-                alert.showAndWait();
-            });
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("URISyntaxException, Not a valid WebSocket URI\n" + ex);
+            alert.showAndWait();
             return;
         }
 
@@ -210,18 +210,24 @@ public class MainViewController {
         String username = signupUsernameField.getText();
         String phoneNumber = signupPhoneNumberField.getText();
 
-        // Check that username AND phoneNumber are unique
+        // Check that the username, password and phone number are in a correct format like length, special characters and the like
+
+        // Hashing the password and phone number
+        String HashedPassword = BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray());
+
+        // Check that username AND phoneNumber(hashed) are unique
         if (Database.isUsernameUnique(username) || Database.isPhoneNumberUnique(phoneNumber)) return;
 
         // Add user to database and Login
         MyUser = new User(username, phoneNumber);
-        Database.addUserToDatabase(username, signupPasswordField.getText(), phoneNumber);
+        Database.addUserToDatabase(username, HashedPassword, phoneNumber); // saving the hashed versions
 
         // Show the USER tab and show users chats
         showUserTab();
         addUsersChatsToScreen();
         cleanSignupForm();
     }
+
 
 
     // Helper Functions

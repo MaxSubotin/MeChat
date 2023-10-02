@@ -5,6 +5,7 @@ module app.mechat {
     requires com.google.gson;
     requires java.sql;
     requires com.zaxxer.hikari;
+    requires bcrypt;
 
 
     opens app.mechat to javafx.fxml;

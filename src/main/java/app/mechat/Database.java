@@ -1,5 +1,7 @@
 package app.mechat;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -22,7 +24,8 @@ public class Database {
             ResultSet rs = pst1.executeQuery();
 
             if (rs.next()) {
-                if (Objects.equals(rs.getString("password"), userPassword))
+                BCrypt.Result result = BCrypt.verifyer().verify(userPassword.toCharArray(), rs.getString("password"));
+                if (result.verified)
                     userFromDatabase = new User(rs.getString("username"), rs.getString("phonenumber"));
             }
         }
