@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.IOException;
 
@@ -24,20 +25,14 @@ public class MeChatMain extends Application {
         stage.setResizable(false);
         stage.show();
 
+        stage.setOnCloseRequest((WindowEvent event) -> {
+            mainViewController.closeConnectionIfOpen();
+        });
+
         mainViewController.openLoginTab();
     }
 
     public static void main(String[] args) {
-//        String location;
-//        if (args.length != 0) {
-//            location = args[0];
-//            System.out.println("Default server url specified: \'" + location + "\'");
-//        } else {
-//            location = "ws://localhost:8887";
-//            System.out.println("Default server url not specified: defaulting to \'" + location + "\'");
-//        }
-//        new ChatClient(location); // cant be here
-
         launch();
         // learn how to open 2 gui apps with 2 threads here to test if it works maybe? or just user visual studio code
     }

@@ -29,14 +29,26 @@
       </ScrollPane>
       <VBox alignment="BOTTOM_LEFT" fillWidth="false" layoutX="200.0" maxHeight="560.0" maxWidth="700.0" minHeight="560.0" prefHeight="560.0" prefWidth="700.0" style="-fx-background-color: green;">
          <children>
-            <Label fx:id="chatNameLabel" prefHeight="35.0" prefWidth="700.0" style="-fx-background-color: #2B2E30;" textFill="WHITESMOKE">
-               <padding>
-                  <Insets left="15.0" />
-               </padding>
-               <font>
-                  <Font name="Damascus Regular" size="24.0" />
-               </font>
-            </Label>
+            <HBox prefHeight="35.0" prefWidth="700.0" style="-fx-background-color: #2B2E30;">
+               <children>
+                  <Label fx:id="chatNameLabel" alignment="BOTTOM_CENTER" prefHeight="35.0" style="-fx-background-color: #2B2E30;" textFill="WHITESMOKE">
+                     <padding>
+                        <Insets left="15.0" />
+                     </padding>
+                     <font>
+                        <Font name="Damascus Regular" size="24.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="connectedLabel" alignment="BOTTOM_LEFT" prefHeight="35.0" style="-fx-background-color: #2B2E30;" textFill="WHITESMOKE">
+                     <font>
+                        <Font name="Damascus Regular" size="12.0" />
+                     </font>
+                     <padding>
+                        <Insets bottom="4.0" left="5.0" right="5.0" />
+                     </padding>
+                  </Label>
+               </children>
+            </HBox>
             <ScrollPane fx:id="chatScrollPane" hbarPolicy="NEVER" maxWidth="700.0" minHeight="525.0" prefHeight="525.0" prefWidth="700.0" style="-fx-background-color: #353839;" vbarPolicy="NEVER">
                <content>
                   <VBox fx:id="chatVBox" alignment="BOTTOM_LEFT" fillWidth="false" maxHeight="525.0" maxWidth="698.0" prefHeight="525.0" prefWidth="698.0" spacing="10.0" style="-fx-background-color: #353839;">

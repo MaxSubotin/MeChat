@@ -33,6 +33,28 @@ public class Database {
         return userFromDatabase;
     }
 
+    public static String getUsernameBySession(String session) {
+        String queryForUser = "SELECT * FROM session_tokens WHERE session_token = ?";
+        String Username = "";
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(queryForUser)) {
+
+            // Find the user in the database and create a User object
+            pst1.setString(1, session);
+            ResultSet rs = pst1.executeQuery();
+
+            if (rs.next()) {
+                Username = rs.getString("username");
+            }
+        }
+        catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+        return Username;
+    }
+
     public static ArrayList<Chat> getUsersChatsFromDatabase(String userUsername) {
         String queryForConversations = "SELECT * FROM conversations WHERE participant1 = ? OR participant2 = ?";
         ArrayList<Chat> usersChats = new ArrayList<Chat>();
@@ -103,6 +125,21 @@ public class Database {
             insertPstUsers.setString(1, userUsername);
             insertPstUsers.setString(2, userPassword);
             insertPstUsers.setString(3, phoneNumber);
+            insertPstUsers.executeUpdate();
+
+        } catch (SQLException e) {
+            catchBlockCode(e);
+        }
+    }
+
+    public static void addSessionToDataBase(String userUsername, String session) {
+        String insertQuery = "INSERT INTO session_tokens (session_token, username) VALUES (?, ?)";
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement insertPstUsers = con.prepareStatement(insertQuery)) {
+
+            insertPstUsers.setString(1, session);
+            insertPstUsers.setString(2, userUsername);
             insertPstUsers.executeUpdate();
 
         } catch (SQLException e) {
@@ -195,7 +232,42 @@ public class Database {
         return usernameUnique;
     }
 
+    public static boolean isUserConnected(String username) {
+        String findUserQuery = "SELECT * FROM session_tokens WHERE username = ?";
+        boolean connected = false;
 
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(findUserQuery)) {
+
+            // Find the user in the database and create a User object
+            pst1.setString(1, username);
+            ResultSet rs = pst1.executeQuery();
+
+            if (rs.next()) {
+                return true;
+            }
+        }
+        catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+        return connected;
+    }
+
+    public static void removeUserSession(String userUsername) {
+        String removeQuery = "DELETE FROM session_tokens WHERE username = ?";
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst = con.prepareStatement(removeQuery)) {
+
+            pst.setString(1, userUsername);
+            pst.executeUpdate();
+
+        } catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+    }
 
 
 //    // ------------------------------------------------------------------ //

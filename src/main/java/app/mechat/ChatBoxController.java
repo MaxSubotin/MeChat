@@ -40,6 +40,12 @@ public class ChatBoxController {
         mainViewControllerReference.setSelectedChatBoxPane(newChatBox);
         mainViewControllerReference.setSelectedChatBoxName(nameLabel.getText());
 
+        // Check if the other person is connected or disconnected
+        if (Database.isUserConnected(nameLabel.getText()))
+            mainViewControllerReference.setConnectedLabelOn();
+        else
+            mainViewControllerReference.setConnectedLabelOff();
+
         // Adding a listener to scroll down whenever there is a new message or messages are loaded (or just any change to the vbox)
         mainViewControllerReference.chatVBox.heightProperty().addListener(
                 (ChangeListener) (observable, oldvalue, newValue) ->

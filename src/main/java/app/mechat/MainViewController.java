@@ -7,23 +7,20 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.drafts.Draft;
-import org.java_websocket.handshake.ServerHandshake;
+import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+
 import java.util.Objects;
+import java.util.UUID;
 
 public class MainViewController {
 
@@ -42,7 +39,7 @@ public class MainViewController {
     @FXML
     TextField messageTextField, loginUsernameField, loginPasswordField, signupUsernameField, signupPhoneNumberField, signupPasswordField;
     @FXML
-    Label chatNameLabel, userUsernameLabel, userPhoneNumberLabel;
+    Label chatNameLabel, userUsernameLabel, userPhoneNumberLabel, connectedLabel;
     @FXML
     Pane loginAndSignupPane;
     @FXML
@@ -115,6 +112,8 @@ public class MainViewController {
 
     @FXML
     public void loginButtonOnClick() {
+        closeConnectionIfOpen();
+
         // Get the text and see if it matches the database, if it does then login into the user
         User user = Database.getUserFromDatabase(loginUsernameField.getText(), loginPasswordField.getText());
         if (user != null) MyUser = user;
@@ -122,39 +121,71 @@ public class MainViewController {
 
         // Initialize the client web socket
         try {
-            webSocketClient = new CustomWebSocketClient(new URI("ws://localhost:8887"), MyUser.getName()) {
+            String session = UUID.randomUUID().toString(); // Generate a unique session or token
+            webSocketClient = new CustomWebSocketClient(new URI("ws://localhost:8887/socket?session=" + session), MyUser.getName()) {
 
                 @Override
                 public void onMessage(String text) {
+                    if (text.contains("SYSTEM//CONNECT//")) {
+                        String[] sysMessage = text.split("//");
+                        if (Objects.equals(chatNameLabel.getText(), sysMessage[2]))
+                            Platform.runLater(() -> { setConnectedLabelOn(); });
+
+                    }
+                    else if (text.contains("SYSTEM//DISCONNECT//")) {
+                        String[] sysMessage = text.split("//");
+                        if (Objects.equals(chatNameLabel.getText(), sysMessage[2]))
+                            Platform.runLater(() -> { setConnectedLabelOff(); });
+
+                    }
+                    else {
+                        Platform.runLater(() -> {
+                            try {
+                                // Creating a new message bubble on the screen and adding the users text into it
+                                FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("chatBubble.fxml"));
+                                HBox chatBubble = fxmlLoader.load();
+
+                                ChatBubbleController controller = fxmlLoader.getController();
+                                controller.setMessageBubbleLabel(text);
+                                controller.setMessage(message);
+
+                                if (message != null) {
+                                    chatBubble.setAlignment(Pos.CENTER_RIGHT); // The users messages appear of the right side
+                                    controller.setMessageBubbleLabelColorBlue(); // The users messages are colored sky-blue
+                                    message = null; // nullify the current message after it is sent to get the app ready for the next message broadcast
+                                } else
+                                    chatBubble.setAlignment(Pos.CENTER_LEFT);
+
+                                // Add message bubble to the screen
+                                chatVBox.getChildren().add(chatBubble);
+
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onClose(int code, String reason, boolean remote) {
                     Platform.runLater(() -> {
-                        try {
-                            // Creating a new message bubble on the screen and adding the users text into it
-                            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("chatBubble.fxml"));
-                            HBox chatBubble = fxmlLoader.load();
-
-                            ChatBubbleController controller = fxmlLoader.getController();
-                            controller.setMessageBubbleLabel(text);
-                            controller.setMessage(message);
-
-                            if (message != null) {
-                                chatBubble.setAlignment(Pos.CENTER_RIGHT); // The users messages appear of the right side
-                                controller.setMessageBubbleLabelColorBlue(); // The users messages are colored sky-blue
-                                message = null; // nullify the current message after it is sent to get the app ready for the next message broadcast
-                            } else
-                                chatBubble.setAlignment(Pos.CENTER_LEFT);
-
-                            // Add message bubble to the screen
-                            chatVBox.getChildren().add(chatBubble);
-
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                        if (code == 1006) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Error");
+                            alert.setHeaderText(null);
+                            alert.setContentText(MyUser.getName() + " has disconnected from the ChatServer; Code: " + code + " " + reason + "\n");
+                            alert.showAndWait();
                         }
+
+                        Stage stage = (Stage) profileButton.getScene().getWindow();
+                        stage.close();
                     });
                 }
 
             };
 
             webSocketClient.connect();
+            Database.addSessionToDataBase(MyUser.getName(), session); // adding the connecting to the database to keep track of connected users
 
         } catch (URISyntaxException ex) {
             Platform.runLater(() -> {
@@ -261,6 +292,11 @@ public class MainViewController {
         loginPasswordField.clear();
     }
 
+    public void closeConnectionIfOpen() {
+        if (webSocketClient != null) {
+            webSocketClient.close();
+        }
+    }
 
     // getters and setters
 
@@ -283,5 +319,9 @@ public class MainViewController {
     public int getNewChatBoxCounter() { return newChatBoxCounter; }
 
     public void setNewChatBoxCounter(int newChatBoxCounter) { this.newChatBoxCounter = newChatBoxCounter; }
+
+    public void setConnectedLabelOn() { connectedLabel.setText("connected"); }
+    public void setConnectedLabelOff() { connectedLabel.setText("disconnected"); }
+    public String getConnectedLabel() { return connectedLabel.getText(); }
 
 }
