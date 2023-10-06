@@ -61,8 +61,8 @@ public class ChatBoxController {
     }
 
     public void addMessageBubbles() {
-        String[] splitChatBoxName = mainViewControllerReference.getSelectedChatBoxPane().getId().split("_");
-        ArrayList<Message> listOfMessages = Database.getChatMessagesFromDatabase(Integer.parseInt(splitChatBoxName[1]));
+        // The id of the chat box pane on the left side is the same as the name of the table that the messages are stored in the database: sender_receiver_conversationId
+        ArrayList<Message> listOfMessages = Database.getChatMessagesFromDatabase(mainViewControllerReference.getSelectedChatBoxPane().getId());
 
         try {
             // For each message in the chat we make a new bubble and add the text into it

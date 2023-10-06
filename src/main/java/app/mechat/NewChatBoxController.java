@@ -2,6 +2,8 @@ package app.mechat;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Cursor;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
@@ -38,6 +40,7 @@ public class NewChatBoxController {
             String tempName = this.getNameTextField();
             controller.setNameLabel(tempName);
             chatBoxPane.setOnMouseClicked(controller::chatBoxOnClick);
+            chatBoxPane.setCursor(Cursor.HAND);
 
             // Removing the temporary chat box and adding the new one
             int tempSize = mainViewControllerReference.getHistoryVBox().getChildren().size();
@@ -50,8 +53,14 @@ public class NewChatBoxController {
             controller.setMainViewControllerReference(mainViewControllerReference);
 
             // Add the chat to the users database
-            Database.addConversationToDatabase(mainViewControllerReference.MyUser.getName() ,tempName);
-
+            int id = Database.addConversationToDatabase(mainViewControllerReference.MyUser.getName() ,tempName);
+            if (id != -1)
+                chatBoxPane.setId(Database.compareStrings(mainViewControllerReference.MyUser.getName(), tempName) + "_" + id);
+            else {
+                tempSize = mainViewControllerReference.getHistoryVBox().getChildren().size();
+                mainViewControllerReference.getHistoryVBox().getChildren().remove(tempSize-1);
+                mainViewControllerReference.showAlertWithMessage(Alert.AlertType.ERROR,"Error","Could not create the conversation.");
+            }
         }
         catch (IOException e) {
             throw new RuntimeException(e);

@@ -45,5 +45,9 @@ public class DatabaseConfig {
     public static Connection getConnection() throws SQLException {
         return dataSource.getConnection();
     }
+
+    public static String getDbName() {
+        return dbName;
+    }
 }
 

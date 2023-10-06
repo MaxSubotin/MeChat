@@ -28,9 +28,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,12 +41,16 @@ import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
+import com.google.gson.Gson;
+
 /**
  * A simple WebSocketServer implementation. Keeps track of a "chatroom".
  */
 public class ChatServer extends WebSocketServer {
 
   private Map<WebSocket, String> connectedUsersMap;
+  private Map<String, WebSocket> reverseLookupMap;
+  private Gson gson;
 
   public ChatServer(int port) throws UnknownHostException {
     super(new InetSocketAddress(port));
@@ -59,6 +63,8 @@ public class ChatServer extends WebSocketServer {
   public ChatServer(int port, Draft_6455 draft) {
     super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
     connectedUsersMap = new ConcurrentHashMap<>();
+    reverseLookupMap = new ConcurrentHashMap<>();
+    gson = new Gson();
   }
 
   @Override
@@ -67,12 +73,22 @@ public class ChatServer extends WebSocketServer {
     String sessionToken = extractSessionFromQuery(handshake.getResourceDescriptor());
 
     // Look up the associated username from the session token (your database logic here)
-    String username = getUsernameForSession(sessionToken);
+    String username = getUsernameFormSession(sessionToken);
 
-    if (username != null && !connectedUsersMap.containsValue(username) && !connectedUsersMap.containsValue(conn)) {
+    if (username != null && !connectedUsersMap.containsValue(username)) {
       // Authentication is successful, proceed with WebSocket communication
       connectedUsersMap.put(conn, username);
-      onMessage(conn,"SYSTEM//CONNECT//" + username);
+      reverseLookupMap.put(username, conn);
+
+      // Create a system message
+      Message sysMessage = new Message("CONNECT//" + username, username, username, new Timestamp(System.currentTimeMillis()).toString() ,"-1");
+      sysMessage.setIsSystemMessage(true);
+
+      // Serialize the message object to JSON
+      String jsonMessage = gson.toJson(sysMessage);
+
+      // Send the json system message
+      onMessage(conn,jsonMessage);
       System.out.println(username + " has entered the room!");
     } else {
       // Invalid session token, reject the WebSocket connection
@@ -88,22 +104,42 @@ public class ChatServer extends WebSocketServer {
 
     if (username != null) {
       connectedUsersMap.remove(conn); // Remove the connection from the map
+      reverseLookupMap.remove(username);
+
+      // Create a system message
+      Message sysMessage = new Message("DISCONNECT//" + username, username, username, new Timestamp(System.currentTimeMillis()).toString() ,"-1");
+      sysMessage.setIsSystemMessage(true);
+
+      // Serialize the message object to JSON
+      String jsonMessage = gson.toJson(sysMessage);
+
+      // Send the json system message
+      onMessage(conn,jsonMessage);
+
+      // Remove the user from the connected users table in the database
       Database.removeUserSession(username);
-      onMessage(conn,"SYSTEM//DISCONNECT//" + username);
       System.out.println(username + " has left the room!");
     }
   }
 
   @Override
   public void onMessage(WebSocket conn, String message) {
-    broadcast(message);
-    //System.out.println(connectedUsersMap.get(conn) + ": " + message);
-  }
+    // Deserialize the received JSON string back to your custom object
+    Message receivedMessage = gson.fromJson(message, Message.class);
 
-  @Override
-  public void onMessage(WebSocket conn, ByteBuffer message) {
-    broadcast(message.array());
-    //System.out.println(conn + ": " + message);
+    if (receivedMessage.getIsSystemMessage()) { // it is a system message
+      broadcast(message);
+    }
+    else {
+      // Access the receiver and send him the message. If he is disconnected then don't send him a message.
+      String receiverUsername = receivedMessage.getReceiver();
+      if (connectedUsersMap.containsValue(receiverUsername)) {
+        WebSocket Receiver = reverseLookupMap.get(receiverUsername);
+        Receiver.send(message);
+      }
+      // Using send method to show the message on the sender's screen
+      conn.send(message);
+    }
   }
 
   @Override
@@ -136,7 +172,7 @@ public class ChatServer extends WebSocketServer {
     return null; // Session token not found or invalid
   }
 
-  private String getUsernameForSession(String sessionToken) {
+  private String getUsernameFormSession(String sessionToken) {
     // Return the username or null if not found
     return Database.getUsernameBySession(sessionToken); // returns null if not found
   }
@@ -162,6 +198,7 @@ public class ChatServer extends WebSocketServer {
         break;
       }
     }
+    Database.cleanUserSessionTabel();
   }
 
 
