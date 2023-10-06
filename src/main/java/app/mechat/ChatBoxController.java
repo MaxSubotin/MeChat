@@ -38,10 +38,10 @@ public class ChatBoxController {
         Pane newChatBox = (Pane) event.getSource();
         newChatBox.setStyle("-fx-border-color: skyblue; -fx-border-radius: 15px; -fx-border-width: 0.5px");
         mainViewControllerReference.setSelectedChatBoxPane(newChatBox);
-        mainViewControllerReference.setSelectedChatBoxName(nameLabel.getText());
+        mainViewControllerReference.setSelectedChatBoxUserId(Database.getUserIdByUsername(nameLabel.getText()));
 
         // Check if the other person is connected or disconnected
-        if (Database.isUserConnected(nameLabel.getText()))
+        if (Database.isUserConnected(mainViewControllerReference.getSelectedChatBoxUserId())) //**** This is not very good, we are making two database calls and opening two connections.
             mainViewControllerReference.setConnectedLabelOn();
         else
             mainViewControllerReference.setConnectedLabelOff();
@@ -74,7 +74,7 @@ public class ChatBoxController {
                 controller.setMessage(message);
 
                 // If the message was from the current user then we make it blue and positioned on the right side
-                if (Objects.equals(message.getSender(), mainViewControllerReference.MyUser.getName())) {
+                if (Objects.equals(message.getSender(), mainViewControllerReference.MyUser.getId())) {
                     controller.setMessageBubbleLabelColorBlue();
                     chatBubblePane.setAlignment(Pos.CENTER_RIGHT);
                 }

@@ -26,7 +26,7 @@ public class Database {
             if (rs.next()) {
                 BCrypt.Result result = BCrypt.verifyer().verify(userPassword.toCharArray(), rs.getString("password"));
                 if (result.verified)
-                    userFromDatabase = new User(rs.getString("username"));
+                    userFromDatabase = new User(rs.getString("username"), rs.getString("id"));
             }
         }
         catch (SQLException e) {
@@ -36,29 +36,9 @@ public class Database {
         return userFromDatabase;
     }
 
-    public static String getUsernameBySession(String session) {
-        String queryForUser = "SELECT * FROM session_tokens WHERE session_token = ?";
-        String Username = "";
 
-        try (Connection con = DatabaseConfig.getConnection();
-             PreparedStatement pst1 = con.prepareStatement(queryForUser)) {
 
-            // Find the user in the database and create a User object
-            pst1.setString(1, session);
-            ResultSet rs = pst1.executeQuery();
-
-            if (rs.next()) {
-                Username = rs.getString("username");
-            }
-        }
-        catch (SQLException e) {
-            catchBlockCode(e);
-        }
-
-        return Username;
-    }
-
-    public static ArrayList<Chat> getUsersChatsFromDatabase(String userUsername) {
+    public static ArrayList<Chat> getUsersChatsFromDatabase(String userId) {
         String queryForConversations = "SELECT * FROM conversations WHERE participant1 = ? OR participant2 = ?";
         ArrayList<Chat> usersChats = new ArrayList<Chat>();
 
@@ -66,22 +46,22 @@ public class Database {
              PreparedStatement pst1 = con.prepareStatement(queryForConversations)) {
 
             // Find all the conversations this user has in the database and for each one we will create a chat box
-            pst1.setString(1, userUsername);
-            pst1.setString(2, userUsername);
+            pst1.setString(1, userId);
+            pst1.setString(2, userId);
             ResultSet rs = pst1.executeQuery();
 
             while (rs.next()) {
-                if (Objects.equals(rs.getString("participant1"), userUsername))
+                if (Objects.equals(rs.getString("participant1"), userId))
                     usersChats.add(new Chat(
                             null,
-                            userUsername,
+                            userId,
                             rs.getString("participant2"),
                             rs.getInt("conversation_id"))
                     );
                 else
                     usersChats.add(new Chat(
                             null,
-                            userUsername,
+                            userId,
                             rs.getString("participant1"),
                             rs.getInt("conversation_id"))
                     );
@@ -105,7 +85,7 @@ public class Database {
             ResultSet rs = pst1.executeQuery();
 
             while (rs.next()) {
-                chatMessages.add(new Message(rs.getString("message_text"), rs.getString("sender_username"), rs.getString("receiver_username"),rs.getString("timestamp"), tableName.split("_")[2]));
+                chatMessages.add(new Message(rs.getString("message_text"), rs.getString("sender_id"), rs.getString("receiver_id"),rs.getString("timestamp"), tableName.split("_")[2]));
             }
 
         } catch (SQLException e) {
@@ -115,17 +95,83 @@ public class Database {
         return chatMessages;
     }
 
+    public static String getUserIdBySession(String session) {
+        String queryForUser = "SELECT * FROM session_tokens WHERE session_token = ?";
+        String userId = null;
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(queryForUser)) {
+
+            // Find the user in the database and create a User object
+            pst1.setString(1, session);
+            ResultSet rs = pst1.executeQuery();
+
+            if (rs.next()) {
+                userId = rs.getString("id");
+            }
+        }
+        catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+        return userId;
+    }
+
+    public static String getUserIdByUsername(String userUsername) {
+        String queryForUser = "SELECT * FROM users WHERE username = ?";
+        String userId = null;
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(queryForUser)) {
+
+            // Find the user in the database and create a User object
+            pst1.setString(1, userUsername);
+            ResultSet rs = pst1.executeQuery();
+
+            if (rs.next()) {
+                userId = rs.getString("id");
+            }
+        }
+        catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+        return userId;
+    }
+
+    public static String getUsernameById(String userId) {
+        String queryForUser = "SELECT * FROM users WHERE id = ?";
+        String username = null;
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(queryForUser)) {
+
+            // Find the user in the database and create a User object
+            pst1.setString(1, userId);
+            ResultSet rs = pst1.executeQuery();
+
+            if (rs.next()) {
+                username = rs.getString("username");
+            }
+        }
+        catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+        return username;
+    }
 
     // ------------------------------------------------------------------ //
 
-    public static void addUserToDatabase(String userUsername, String userPassword) {
-        String insertQueryUsers = "INSERT INTO users(username, password) VALUES(?, ?)";
+    public static void addUserToDatabase(String userUsername, String userPassword, String userId) {
+        String insertQueryUsers = "INSERT INTO users(username, password, id) VALUES(?, ?, ?)";
 
         try (Connection con = DatabaseConfig.getConnection();
              PreparedStatement insertPstUsers = con.prepareStatement(insertQueryUsers)) {
 
             insertPstUsers.setString(1, userUsername);
             insertPstUsers.setString(2, userPassword);
+            insertPstUsers.setString(3, userId);
             insertPstUsers.executeUpdate();
 
         } catch (SQLException e) {
@@ -133,14 +179,14 @@ public class Database {
         }
     }
 
-    public static void addSessionToDataBase(String userUsername, String session) {
-        String insertQuery = "INSERT INTO session_tokens (session_token, username) VALUES (?, ?)";
+    public static void addSessionToDataBase(String userId, String session) {
+        String insertQuery = "INSERT INTO session_tokens (session_token, id) VALUES (?, ?)";
 
         try (Connection con = DatabaseConfig.getConnection();
              PreparedStatement insertPstUsers = con.prepareStatement(insertQuery)) {
 
             insertPstUsers.setString(1, session);
-            insertPstUsers.setString(2, userUsername);
+            insertPstUsers.setString(2, userId);
             insertPstUsers.executeUpdate();
 
         } catch (SQLException e) {
@@ -200,9 +246,9 @@ public class Database {
         return returnConvId;
     }
 
-    public static void addMessageToDatabase(Message message, String receiver, int conversation_id) {
-        String tableName = compareStrings(message.getSender(), receiver);
-        String insertQuery = "INSERT INTO " + tableName + "_" + conversation_id + " (sender_username, receiver_username, timestamp, message_text) VALUES (?, ?, ?, ?)";
+    public static void addMessageToDatabase(Message message, int conversation_id) {
+        String tableName = compareStrings(message.getSender(), message.getReceiver());
+        String insertQuery = "INSERT INTO " + tableName + "_" + conversation_id + " (sender_id, receiver_id, timestamp, message_text) VALUES (?, ?, ?, ?)";
 
         try (Connection con = DatabaseConfig.getConnection();
              PreparedStatement pst1 = con.prepareStatement(insertQuery)) {
@@ -263,7 +309,7 @@ public class Database {
     }
 
     public static void createConversationMessagesTable(Connection con, String tableName) {
-        String query = "CREATE TABLE IF NOT EXISTS " + tableName + " (message_id SERIAL PRIMARY KEY, sender_username VARCHAR(255) NOT NULL, receiver_username VARCHAR(255) NOT NULL, timestamp TIMESTAMP NOT NULL, message_text TEXT NOT NULL)";
+        String query = "CREATE TABLE IF NOT EXISTS " + tableName + " (message_id SERIAL PRIMARY KEY, sender_id VARCHAR(255) NOT NULL, receiver_id VARCHAR(255) NOT NULL, timestamp TIMESTAMP NOT NULL, message_text TEXT NOT NULL)";
 
         try (Statement stmt = con.createStatement()) {
 
@@ -287,6 +333,7 @@ public class Database {
             if (rs.next()) {
                 int count = rs.getInt("count");
                 if (count > 0) {
+                    System.out.println("in here");
                     usernameUnique = false;
                 }
             }
@@ -298,15 +345,15 @@ public class Database {
         return usernameUnique;
     }
 
-    public static boolean isUserConnected(String username) {
-        String findUserQuery = "SELECT * FROM session_tokens WHERE username = ?";
+    public static boolean isUserConnected(String userId) {
+        String findUserQuery = "SELECT * FROM session_tokens WHERE id = ?";
         boolean connected = false;
 
         try (Connection con = DatabaseConfig.getConnection();
              PreparedStatement pst1 = con.prepareStatement(findUserQuery)) {
 
             // Find the user in the database and create a User object
-            pst1.setString(1, username);
+            pst1.setString(1, userId);
             ResultSet rs = pst1.executeQuery();
 
             if (rs.next()) {
@@ -320,13 +367,13 @@ public class Database {
         return connected;
     }
 
-    public static void removeUserSession(String userUsername) {
-        String removeQuery = "DELETE FROM session_tokens WHERE username = ?";
+    public static void removeUserSession(String userId) {
+        String removeQuery = "DELETE FROM session_tokens WHERE id = ?";
 
         try (Connection con = DatabaseConfig.getConnection();
              PreparedStatement pst = con.prepareStatement(removeQuery)) {
 
-            pst.setString(1, userUsername);
+            pst.setString(1, userId);
             pst.executeUpdate();
 
         } catch (SQLException e) {
@@ -346,6 +393,30 @@ public class Database {
         } catch (SQLException e) {
             catchBlockCode(e);
         }
+    }
+
+    public static boolean isUserIdUnique(String userId) {
+        String findUserQuery = "SELECT COUNT(*) as count FROM users WHERE id = ?";
+        boolean userIdUnique = true;
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst = con.prepareStatement(findUserQuery)) {
+
+            pst.setString(1, userId);
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+                int count = rs.getInt("count");
+                if (count > 0) {
+                    userIdUnique = false;
+                }
+            }
+
+        } catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+        return userIdUnique;
     }
 
 
@@ -392,133 +463,6 @@ public class Database {
             return receiver + "_" + sender;
     }
 
-
-//    public static void saveCurrentGame(Player currentPlayer, int[][] currentGame, int[][] gameSolution, String difficulty, String timer, int mistakes) {
-//        String saveQuery = "INSERT INTO users_games(username, date, game, solution, difficulty, timer, mistakes) VALUES(?, ?, ?::json, ?::json, ?, ?, ?)";
-//        String updateQuery = "UPDATE users_info SET saved_games = ? WHERE username = ?";
-//
-//        try (Connection con = DatabaseConfig.getConnection();
-//             PreparedStatement pstSave = con.prepareStatement(saveQuery);
-//             PreparedStatement pstUpdate = con.prepareStatement(updateQuery)) {
-//
-//            // Get the current date
-//            LocalDate currentDate = LocalDate.now();
-//            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-//            String formattedDate = currentDate.format(formatter);
-//
-//            pstSave.setString(1, currentPlayer.getUsername());
-//            pstSave.setString(2, formattedDate + "-" + LoginController.currentPlayer.getSavedGamesCounter());
-//            pstSave.setString(3, new Gson().toJson(currentGame));
-//            pstSave.setString(4, new Gson().toJson(gameSolution));
-//            pstSave.setString(5, difficulty);
-//            pstSave.setString(6, timer);
-//            pstSave.setInt(7, mistakes);
-//            pstSave.executeUpdate();
-//
-//            LoginController.currentPlayer.setSavedGamesCounter(LoginController.currentPlayer.getSavedGamesCounter() + 1);
-//
-//            pstUpdate.setInt(1, currentPlayer.getSavedGamesCounter());
-//            pstUpdate.setString(2, currentPlayer.getUsername());
-//            pstUpdate.executeUpdate();
-//
-//        } catch (SQLException e) {
-//            catchBlockCode(e);
-//        }
-//    }
-//
-//    public static ArrayList<String> getAllUserGameDates(String userUsername) {
-//        String query = "SELECT * FROM users_games WHERE username = ?";
-//        ArrayList<String> dates = new ArrayList<String>();
-//
-//        try (Connection con = DatabaseConfig.getConnection();
-//             PreparedStatement pst = con.prepareStatement(query)) {
-//
-//            pst.setString(1,userUsername);
-//            ResultSet rs = pst.executeQuery();
-//
-//            while(rs.next()) {
-//                dates.add(rs.getString("date"));
-//            }
-//
-//        } catch (SQLException e) {
-//            catchBlockCode(e);
-//        }
-//
-//        return dates;
-//    }
-//
-//    public static SudokuGameData getGameByUsernameAndDate(String userUsername, String gameDate) {
-//        String query = "SELECT * FROM users_games WHERE username = ? AND date = ?";
-//        SudokuGameData requestedGame = null;
-//
-//        try (Connection con = DatabaseConfig.getConnection();
-//             PreparedStatement pst = con.prepareStatement(query)) {
-//
-//            pst.setString(1, userUsername);
-//            pst.setString(2, gameDate);
-//            ResultSet rs = pst.executeQuery();
-//
-//            if (rs.next()) {
-//                requestedGame = turnJsonIntoArray(rs);
-//            }
-//
-//        } catch (SQLException e) {
-//            catchBlockCode(e);
-//        }
-//
-//        return requestedGame;
-//    }
-//
-//    public static SudokuGameData getLastGame(String userUsername) {
-//        String query = "SELECT * FROM users_games WHERE username = ? ORDER BY date DESC LIMIT 1";
-//        SudokuGameData requestedGame = null;
-//
-//        try (Connection con = DatabaseConfig.getConnection();
-//             PreparedStatement pst = con.prepareStatement(query)) {
-//
-//            pst.setString(1, userUsername);
-//            ResultSet rs = pst.executeQuery();
-//
-//            if (rs.next()) {
-//                requestedGame = turnJsonIntoArray(rs);
-//            }
-//
-//        } catch (SQLException e) {
-//            catchBlockCode(e);
-//        }
-//        return requestedGame;
-//    }
-//
-//    public static void setUserMistakesCounter(String userUsername, int count) {
-//        String query = "UPDATE users_info SET mistakes = ? WHERE username = ?";
-//
-//        try (Connection con = DatabaseConfig.getConnection();
-//             PreparedStatement pst = con.prepareStatement(query)) {
-//
-//            pst.setInt(1, count);
-//            pst.setString(2, userUsername);
-//            pst.executeUpdate();
-//
-//        } catch (SQLException e) {
-//            catchBlockCode(e);
-//        }
-//    }
-//
-//    public static void setUserSolvedCounter(String userUsername, int count) {
-//        String query = "UPDATE users_info SET solved = ? WHERE username = ?";
-//
-//        try (Connection con = DatabaseConfig.getConnection();
-//             PreparedStatement pst = con.prepareStatement(query)) {
-//
-//            pst.setInt(1, count);
-//            pst.setString(2, userUsername);
-//            pst.executeUpdate();
-//
-//        } catch (SQLException e) {
-//            catchBlockCode(e);
-//        }
-//    }
-//
 //
 //    // ------------------------------------------------------------------ //
 //
@@ -548,6 +492,8 @@ public class Database {
         Logger lgr = Logger.getLogger(Database.class.getName());
         lgr.log(Level.SEVERE, e.getMessage(), e);
     }
+
+
 
 //
 //    private static SudokuGameData turnJsonIntoArray(ResultSet rs) throws SQLException {

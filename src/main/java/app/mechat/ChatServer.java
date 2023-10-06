@@ -73,15 +73,15 @@ public class ChatServer extends WebSocketServer {
     String sessionToken = extractSessionFromQuery(handshake.getResourceDescriptor());
 
     // Look up the associated username from the session token (your database logic here)
-    String username = getUsernameFormSession(sessionToken);
+    String userId = getUserIdFormSession(sessionToken);
 
-    if (username != null && !connectedUsersMap.containsValue(username)) {
+    if (userId != null && !connectedUsersMap.containsValue(userId)) {
       // Authentication is successful, proceed with WebSocket communication
-      connectedUsersMap.put(conn, username);
-      reverseLookupMap.put(username, conn);
+      connectedUsersMap.put(conn, userId);
+      reverseLookupMap.put(userId, conn);
 
       // Create a system message
-      Message sysMessage = new Message("CONNECT//" + username, username, username, new Timestamp(System.currentTimeMillis()).toString() ,"-1");
+      Message sysMessage = new Message("CONNECT//" + userId, userId, userId, new Timestamp(System.currentTimeMillis()).toString() ,"-1");
       sysMessage.setIsSystemMessage(true);
 
       // Serialize the message object to JSON
@@ -89,7 +89,7 @@ public class ChatServer extends WebSocketServer {
 
       // Send the json system message
       onMessage(conn,jsonMessage);
-      System.out.println(username + " has entered the room!");
+      System.out.println(userId + " has entered the room!");
     } else {
       // Invalid session token, reject the WebSocket connection
       System.out.println("ERROR!");
@@ -100,14 +100,11 @@ public class ChatServer extends WebSocketServer {
   @Override
   public void onClose(WebSocket conn, int code, String reason, boolean remote) {
     // Get the associated username
-    String username = connectedUsersMap.get(conn);
+    String userId = connectedUsersMap.get(conn);
 
-    if (username != null) {
-      connectedUsersMap.remove(conn); // Remove the connection from the map
-      reverseLookupMap.remove(username);
-
+    if (userId != null) {
       // Create a system message
-      Message sysMessage = new Message("DISCONNECT//" + username, username, username, new Timestamp(System.currentTimeMillis()).toString() ,"-1");
+      Message sysMessage = new Message("DISCONNECT//" + userId, userId, userId, new Timestamp(System.currentTimeMillis()).toString() ,"-1");
       sysMessage.setIsSystemMessage(true);
 
       // Serialize the message object to JSON
@@ -116,9 +113,13 @@ public class ChatServer extends WebSocketServer {
       // Send the json system message
       onMessage(conn,jsonMessage);
 
+      // Remove the connection from the map
+      connectedUsersMap.remove(conn);
+      reverseLookupMap.remove(userId);
+
       // Remove the user from the connected users table in the database
-      Database.removeUserSession(username);
-      System.out.println(username + " has left the room!");
+      Database.removeUserSession(userId);
+      System.out.println(userId + " has left the room!");
     }
   }
 
@@ -132,9 +133,9 @@ public class ChatServer extends WebSocketServer {
     }
     else {
       // Access the receiver and send him the message. If he is disconnected then don't send him a message.
-      String receiverUsername = receivedMessage.getReceiver();
-      if (connectedUsersMap.containsValue(receiverUsername)) {
-        WebSocket Receiver = reverseLookupMap.get(receiverUsername);
+      String receiverUserId = receivedMessage.getReceiver();
+      if (connectedUsersMap.containsValue(receiverUserId)) {
+        WebSocket Receiver = reverseLookupMap.get(receiverUserId);
         Receiver.send(message);
       }
       // Using send method to show the message on the sender's screen
@@ -172,9 +173,9 @@ public class ChatServer extends WebSocketServer {
     return null; // Session token not found or invalid
   }
 
-  private String getUsernameFormSession(String sessionToken) {
+  private String getUserIdFormSession(String sessionToken) {
     // Return the username or null if not found
-    return Database.getUsernameBySession(sessionToken); // returns null if not found
+    return Database.getUserIdBySession(sessionToken); // returns null if not found
   }
   // // // // // // // // // // // // // // // // // // // // // // //
 

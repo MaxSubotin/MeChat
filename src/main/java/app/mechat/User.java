@@ -3,10 +3,11 @@ package app.mechat;
 import java.util.ArrayList;
 
 public class User {
-    private String name;
+    private String name, id;
 
-    public User(String _name) {
+    public User(String _name, String _id) {
         this.name = _name;
+        this.id = _id;
     }
 
     // getters and setters
@@ -16,5 +17,13 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

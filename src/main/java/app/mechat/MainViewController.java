@@ -15,6 +15,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -31,10 +32,13 @@ public class MainViewController {
 
     public User MyUser = null;
     private Pane selectedChatBoxPane;
-    private String selectedChatBoxName;
+    private String selectedChatBoxUserId;
     private int newChatBoxCounter = 0;
     private CustomWebSocketClient webSocketClient;
     private Message message = null;
+
+    // Create a Gson object for JSON serialization/deserialization.
+    private final Gson gson = new Gson();
 
 
     @FXML
@@ -91,17 +95,16 @@ public class MainViewController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedTime = currentTime.format(formatter);
 
-        // Get current conversation id
+        // Get current conversation id and receiver userId
         String conversationId = selectedChatBoxPane.getId().split("_")[2];
+        String receiverId = selectedChatBoxPane.getId().split("_")[0];
+        if (Objects.equals(receiverId, MyUser.getId()))
+            receiverId = selectedChatBoxPane.getId().split("_")[1]; // change the receiver id to the other id of the conversation if needed.
 
         // Create a message object and the controller to access methods
-        message = new Message(text, MyUser.getName(), chatNameLabel.getText(), formattedTime, conversationId);
+        message = new Message(text, MyUser.getId(), receiverId, formattedTime, conversationId);
 
-        // Turn Message object into json format:
-        // Create a Gson object for JSON serialization/deserialization.
-        Gson gson = new Gson();
-
-        // Serialize the message object to JSON.
+        // Turn Message object into json format
         String jsonMessage = gson.toJson(message);
 
         // Send the message in json format to the chat server where it will be sent to the correct user
@@ -109,7 +112,7 @@ public class MainViewController {
 
         // Add the message to the database
         String[] splitChatBoxName = this.getSelectedChatBoxPane().getId().split("_");
-        Database.addMessageToDatabase(message, chatNameLabel.getText(), Integer.parseInt(splitChatBoxName[2]));
+        Database.addMessageToDatabase(message, Integer.parseInt(splitChatBoxName[2]));
 
         messageTextField.clear(); // Removing the text from the textfield
         getFocus();
@@ -132,6 +135,17 @@ public class MainViewController {
         if (Database.isUsernameUnique(newUsername)) {
             Database.updateUsernameInDatabase(newUsername, MyUser.getName());
             MyUser.setName(newUsername);
+
+            // Create a system message object
+            Message sysMessage = new Message("USERNAME//CHANGED//" + newUsername, MyUser.getId(), MyUser.getId(), new Timestamp(System.currentTimeMillis()).toString() ,"-1");
+            sysMessage.setIsSystemMessage(true);
+
+            // Turn Message object into json format
+            String jsonSysMessage = gson.toJson(sysMessage);
+
+            // Send message to users that you have changed your name
+            webSocketClient.send(jsonSysMessage);
+            settingsUsernameField.clear();
         } else {
             // Show and error message
             showAlertWithMessage(Alert.AlertType.ERROR,"Error", newUsername + " is already taken.\nTry a different username.");
@@ -148,6 +162,7 @@ public class MainViewController {
 
             // Update the database
             Database.updatePasswordInDatabase(HashedPassword, MyUser.getName());
+            signupPasswordField.clear();
         } else {
             // Show and error message
             showAlertWithMessage(Alert.AlertType.ERROR,"Error", "Your new password is not good enough.\nTry a different one.");
@@ -166,18 +181,48 @@ public class MainViewController {
         loginAndSignupPane.setVisible(false);
     }
 
+
     @FXML
     public void loginButtonOnClick() {
-        // Cleaning the UI
+        // If Logged it clean the UI
         closeConnectionIfOpen(); // close any open connections if there are any
         chatVBox.getChildren().clear(); // clean the chats of the left if there are any
         chatNameLabel.setText(" ");
         connectedLabel.setText(" ");
 
-        // Get the text and see if it matches the database, if it does then login into the user
-        User user = Database.getUserFromDatabase(loginUsernameField.getText(), loginPasswordField.getText());
-        if (user != null) MyUser = user;
-        else return;
+        // Try to log the user into his account if it exists
+        if (handleUserLogin(Database.getUserFromDatabase(loginUsernameField.getText(), loginPasswordField.getText())))
+            cleanLoginForm();
+    }
+
+    @FXML
+    public void signupButtonOnClick() {
+        // Getting the username and hashing the password
+        String username = signupUsernameField.getText();
+        String HashedPassword = BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray());
+
+        // Check that the username and password are in a correct format like length, special characters and the like
+        // ?
+
+        // Check that username is unique
+        if (!Database.isUsernameUnique(username)) return;
+
+        // Generate a unique user id
+        String userId = UniqueUserIdGenerator.generateUniqueUserId();
+
+        // Add user to database and Login
+        MyUser = new User(username, userId);
+        Database.addUserToDatabase(username, HashedPassword, userId); // saving the hashed version of the password
+
+        // Log the user into his account
+        if (handleUserLogin(MyUser))
+            cleanSignupForm();
+    }
+
+
+    private boolean handleUserLogin(User user) {
+        if (user == null) return false;
+        else MyUser = user;
 
         // Initialize the client web socket
         try {
@@ -193,20 +238,30 @@ public class MainViewController {
                     Message receivedMessage = gson.fromJson(text, Message.class);
 
                     if (receivedMessage.getIsSystemMessage()) { // it is a system message
-                        if (text.contains("CONNECT//")) {
-                            if (Objects.equals(chatNameLabel.getText(), receivedMessage.getSender()))
-                                Platform.runLater(() -> { setConnectedLabelOn(); });
-                        }
-                        else if (text.contains("DISCONNECT//")) {
-                            if (Objects.equals(chatNameLabel.getText(), receivedMessage.getSender()))
-                                Platform.runLater(() -> { setConnectedLabelOff(); });
+                        if (!Objects.equals(MyUser.getId(), receivedMessage.getSender())) {
+                            if (text.contains("DISCONNECT//")) {
+                                if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender()))
+                                    Platform.runLater(() -> {
+                                        setConnectedLabelOff();
+                                    });
+                            } else if (text.contains("CONNECT//")) {
+                                if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender()))
+                                    Platform.runLater(() -> {
+                                        setConnectedLabelOn();
+                                    });
+                            } else if (text.contains("USERNAME//CHANGED//")) {
+                                Platform.runLater(() -> {
+                                    if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) { chatNameLabel.setText(receivedMessage.getText().split("//")[2]); }
+                                    addUsersChatsToScreen();
+                                });
+                            }
                         }
                     }
                     else {
                         // Explanation: we will know that the current user is looking at the chat where the message was received if the sender of the message
                         // AND the chatNameLabel.getText() are equal, there for the current user is looking at the chat when the message is received
 
-                        if (Objects.equals(MyUser.getName(),receivedMessage.getSender()) || Objects.equals(chatNameLabel.getText(), receivedMessage.getSender())) {
+                        if (Objects.equals(MyUser.getId(),receivedMessage.getSender()) || Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) {
                             Platform.runLater(() -> {
                                 try {
                                     // Creating a new message bubble on the screen and adding the users text into it
@@ -250,12 +305,12 @@ public class MainViewController {
 
             };
 
-            Database.addSessionToDataBase(MyUser.getName(), session); // adding the connecting to the database to keep track of connected users
+            Database.addSessionToDataBase(MyUser.getId(), session); // adding the connecting to the database to keep track of connected users
             webSocketClient.connect();
 
         } catch (URISyntaxException ex) {
             showAlertWithMessage(Alert.AlertType.ERROR, "Error", "URISyntaxException, Not a valid WebSocket URI\n" + ex);
-            return;
+            return false;
         }
 
         // Show the USER tab and show users chats
@@ -263,28 +318,7 @@ public class MainViewController {
         addUsersChatsToScreen();
         cleanLoginForm();
 
-    }
-
-    @FXML
-    public void signupButtonOnClick() {
-        String username = signupUsernameField.getText();
-
-        // Check that the username and password are in a correct format like length, special characters and the like
-
-        // Hashing the password
-        String HashedPassword = BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray());
-
-        // Check that username is unique
-        if (Database.isUsernameUnique(username)) return;
-
-        // Add user to database and Login
-        MyUser = new User(username);
-        Database.addUserToDatabase(username, HashedPassword); // saving the hashed versions
-
-        // Show the USER tab and show users chats
-        showUserTab();
-        addUsersChatsToScreen();
-        cleanSignupForm();
+        return true;
     }
 
 
@@ -329,7 +363,7 @@ public class MainViewController {
         historyVBox.getChildren().clear(); // clean the chats of the left if there are any
 
         // maybe do this operation in a separate thread in case a user has a lot of chats...
-        ArrayList<Chat> usersChats = Database.getUsersChatsFromDatabase(MyUser.getName());
+        ArrayList<Chat> usersChats = Database.getUsersChatsFromDatabase(MyUser.getId());
         for (Chat chat: usersChats) {
             try {
                 FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("chatBox.fxml"));
@@ -339,7 +373,7 @@ public class MainViewController {
                 ChatBoxController controller = fxmlLoader.getController();
 
                 controller.setMainViewControllerReference(this);
-                controller.setNameLabel(chat.getReceiver());
+                controller.setNameLabel(Database.getUsernameById(chat.getReceiver()));
                 getHistoryVBox().getChildren().add(chatBoxPane);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -385,9 +419,9 @@ public class MainViewController {
 
     public void setSelectedChatBoxPane(Pane chatBoxPane) { this.selectedChatBoxPane = chatBoxPane; }
 
-    public String getSelectedChatBoxName() { return selectedChatBoxName; }
+    public String getSelectedChatBoxUserId() { return selectedChatBoxUserId; }
 
-    public void setSelectedChatBoxName(String selectedChatBoxName) { this.selectedChatBoxName = selectedChatBoxName; }
+    public void setSelectedChatBoxUserId(String selectedChatBoxName) { this.selectedChatBoxUserId = selectedChatBoxName; }
 
     public int getNewChatBoxCounter() { return newChatBoxCounter; }
 
