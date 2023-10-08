@@ -37,8 +37,8 @@ public class MainViewController {
     private CustomWebSocketClient webSocketClient;
     private Message message = null;
 
-    // Create a Gson object for JSON serialization/deserialization.
-    private final Gson gson = new Gson();
+
+    private final Gson gson = new Gson(); // Create a Gson object for JSON serialization/deserialization.
 
 
     @FXML

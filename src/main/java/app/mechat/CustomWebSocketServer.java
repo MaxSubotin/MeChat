@@ -51,14 +51,6 @@ public class CustomWebSocketServer extends WebSocketServer {
   private Map<String, WebSocket> reverseLookupMap;
   private Gson gson;
 
-  public CustomWebSocketServer(int port) throws UnknownHostException {
-    super(new InetSocketAddress(port));
-  }
-
-  public CustomWebSocketServer(InetSocketAddress address) {
-    super(address);
-  }
-
   public CustomWebSocketServer(int port, Draft_6455 draft) {
     super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
     connectedUsersMap = new ConcurrentHashMap<>();
