@@ -233,7 +233,7 @@ public class MainViewController {
         // Initialize the client web socket
         try {
             String session = UUID.randomUUID().toString(); // Generate a unique session or token
-            webSocketClient = new CustomWebSocketClient(new URI("ws://localhost:8887/socket?session=" + session), MyUser.getName()) {
+            webSocketClient = new CustomWebSocketClient(new URI("ws://localhost:8888/socket?session=" + session), MyUser.getName()) {
 
                 @Override
                 public void onMessage(String text) {
