@@ -34,7 +34,6 @@ public class MeChatMain extends Application {
 
     public static void main(String[] args) {
         launch();
-        // learn how to open 2 gui apps with 2 threads here to test if it works maybe? or just user visual studio code
     }
 
 }
