@@ -1,5 +1,6 @@
-package app.mechat;
+package controllers;
 
+import database.Database;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -26,6 +27,11 @@ import java.util.UUID;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 
 import com.google.gson.Gson;
+import util.Chat;
+import util.Message;
+import util.UniqueUserIdGenerator;
+import util.User;
+import websockets.CustomWebSocketClient;
 
 
 public class MainViewController {
@@ -68,7 +74,7 @@ public class MainViewController {
         // Adding a new chat box to the screen, waiting for the user to input the receiver's name/number
         try {
             // Add the chat box to the screen
-            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("newChatBox.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/newChatBox.fxml"));
             Pane newChatBoxPane = fxmlLoader.load();
             newChatBoxCounter++;
 
@@ -265,7 +271,7 @@ public class MainViewController {
                             Platform.runLater(() -> {
                                 try {
                                     // Creating a new message bubble on the screen and adding the users text into it
-                                    FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("chatBubble.fxml"));
+                                    FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBubble.fxml"));
                                     HBox chatBubble = fxmlLoader.load();
 
                                     ChatBubbleController controller = fxmlLoader.getController();
@@ -366,7 +372,7 @@ public class MainViewController {
         ArrayList<Chat> usersChats = Database.getUsersChatsFromDatabase(MyUser.getId());
         for (Chat chat: usersChats) {
             try {
-                FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("chatBox.fxml"));
+                FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBox.fxml"));
                 Pane chatBoxPane = fxmlLoader.load();
                 chatBoxPane.setId(Database.compareStrings(chat.getSender(), chat.getReceiver()) + "_" + chat.getConversation_id());
                 chatBoxPane.setCursor(Cursor.HAND);

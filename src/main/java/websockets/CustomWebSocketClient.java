@@ -1,4 +1,4 @@
-package app.mechat;
+package websockets;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import org.java_websocket.client.WebSocketClient;

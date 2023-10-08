@@ -1,7 +1,8 @@
-package app.mechat;
+package util;
+
+import database.Database;
 
 import java.security.SecureRandom;
-import java.math.BigInteger;
 
 public class UniqueUserIdGenerator {
     private static final int ID_LENGTH = 10; // Length of the user ID

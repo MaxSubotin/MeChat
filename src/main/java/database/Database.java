@@ -1,5 +1,8 @@
-package app.mechat;
+package database;
 
+import util.Chat;
+import util.Message;
+import util.User;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 
 import java.sql.*;

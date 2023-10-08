@@ -1,5 +1,6 @@
-package app.mechat;
+package controllers;
 
+import database.Database;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
@@ -9,7 +10,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class NewChatBoxController {
 
@@ -36,7 +36,7 @@ public class NewChatBoxController {
             if (tempNameId == null) return; // user was not found, do nothing.
 
             // Create the conversation chat box
-            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("chatBox.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBox.fxml"));
             Pane chatBoxPane = fxmlLoader.load();
 
             // Setting the name of the contact and an on-click event

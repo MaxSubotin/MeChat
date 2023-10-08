@@ -1,4 +1,4 @@
-package app.mechat;
+package util;
 
 public class Message {
     public String text, sender, receiver, timestamp, conversation_id;

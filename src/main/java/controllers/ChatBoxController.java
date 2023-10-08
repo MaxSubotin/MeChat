@@ -1,13 +1,13 @@
-package app.mechat;
+package controllers;
 
+import database.Database;
+import util.Message;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
@@ -67,7 +67,7 @@ public class ChatBoxController {
         try {
             // For each message in the chat we make a new bubble and add the text into it
             for (Message message: listOfMessages) {
-                FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("chatBubble.fxml"));
+                FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBubble.fxml"));
                 HBox chatBubblePane = fxmlLoader.load();
                 ChatBubbleController controller = fxmlLoader.getController();
                 controller.setMessageBubbleLabel(message.getText());

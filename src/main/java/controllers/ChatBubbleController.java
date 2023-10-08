@@ -1,5 +1,6 @@
-package app.mechat;
+package controllers;
 
+import util.Message;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
