@@ -29,7 +29,6 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Map;
@@ -46,21 +45,21 @@ import com.google.gson.Gson;
 /**
  * A simple WebSocketServer implementation. Keeps track of a "chatroom".
  */
-public class ChatServer extends WebSocketServer {
+public class CustomWebSocketServer extends WebSocketServer {
 
   private Map<WebSocket, String> connectedUsersMap;
   private Map<String, WebSocket> reverseLookupMap;
   private Gson gson;
 
-  public ChatServer(int port) throws UnknownHostException {
+  public CustomWebSocketServer(int port) throws UnknownHostException {
     super(new InetSocketAddress(port));
   }
 
-  public ChatServer(InetSocketAddress address) {
+  public CustomWebSocketServer(InetSocketAddress address) {
     super(address);
   }
 
-  public ChatServer(int port, Draft_6455 draft) {
+  public CustomWebSocketServer(int port, Draft_6455 draft) {
     super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
     connectedUsersMap = new ConcurrentHashMap<>();
     reverseLookupMap = new ConcurrentHashMap<>();
@@ -186,7 +185,7 @@ public class ChatServer extends WebSocketServer {
     } catch (Exception ex) {
       ex.printStackTrace();
     }
-    ChatServer s = new ChatServer(port, new Draft_6455());
+    CustomWebSocketServer s = new CustomWebSocketServer(port, new Draft_6455());
     s.start();
     System.out.println("ChatServer started on port: " + s.getPort());
 
@@ -194,7 +193,7 @@ public class ChatServer extends WebSocketServer {
     while (true) {
       String in = sysin.readLine();
       s.broadcast(in);
-      if (in.equals("exit")) {
+      if (in.equals("q")) {
         s.stop(1000);
         break;
       }
