@@ -2,7 +2,7 @@ package util;
 
 import java.util.ArrayList;
 
-public class Chat {
+public class            Chat {
 
     private ArrayList<Message> messages;
     private String sender, receiver;

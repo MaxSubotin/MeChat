@@ -1,5 +1,6 @@
 package controllers;
 
+import com.google.gson.GsonBuilder;
 import database.Database;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -27,10 +28,7 @@ import java.util.UUID;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 
 import com.google.gson.Gson;
-import util.Chat;
-import util.Message;
-import util.UniqueUserIdGenerator;
-import util.User;
+import util.*;
 import websockets.CustomWebSocketClient;
 
 
@@ -43,8 +41,8 @@ public class MainViewController {
     private CustomWebSocketClient webSocketClient;
     private Message message = null;
 
-
-    private final Gson gson = new Gson(); // Create a Gson object for JSON serialization/deserialization.
+    // Create a Gson object for JSON serialization/deserialization.
+    private final Gson gson = new GsonBuilder().registerTypeAdapter(Message.class, new MessageAdapter()).create();
 
 
     @FXML
@@ -237,9 +235,6 @@ public class MainViewController {
 
                 @Override
                 public void onMessage(String text) {
-                    // Create a Gson object for JSON serialization/deserialization.
-                    Gson gson = new Gson();
-
                     // Deserialize the received JSON string back to your custom object
                     Message receivedMessage = gson.fromJson(text, Message.class);
 

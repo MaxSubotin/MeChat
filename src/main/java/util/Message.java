@@ -1,8 +1,8 @@
 package util;
 
 public class Message {
-    public String text, sender, receiver, timestamp, conversation_id;
-    public boolean isSystemMessage;
+    private String text, sender, receiver, timestamp, conversation_id;
+    private boolean isSystemMessage;
 
     public Message(String _text, String _sender, String _receiver, String _timestamp, String _conversation_id) {
         this.text = _text;
@@ -53,4 +53,8 @@ public class Message {
     public void setReceiver(String receiver) {
         this.receiver = receiver;
     }
+
+    public String getConversation_id() { return conversation_id; }
+
+    public void setConversation_id(String conversation_id) { this.conversation_id = conversation_id; }
 }

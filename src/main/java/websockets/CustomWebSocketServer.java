@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.gson.GsonBuilder;
 import util.Message;
 import database.Database;
 import org.java_websocket.WebSocket;
@@ -42,6 +43,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import com.google.gson.Gson;
+import util.MessageAdapter;
 
 /**
  * A simple WebSocketServer implementation. Keeps track of a "chatroom".
@@ -50,13 +52,12 @@ public class CustomWebSocketServer extends WebSocketServer {
 
   private Map<WebSocket, String> connectedUsersMap;
   private Map<String, WebSocket> reverseLookupMap;
-  private Gson gson;
+  private final Gson gson = new GsonBuilder().registerTypeAdapter(Message.class, new MessageAdapter()).create();
 
   public CustomWebSocketServer(int port, Draft_6455 draft) {
     super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
     connectedUsersMap = new ConcurrentHashMap<>();
     reverseLookupMap = new ConcurrentHashMap<>();
-    gson = new Gson();
   }
 
   @Override
