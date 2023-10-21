@@ -29,7 +29,7 @@ public class Database {
             if (rs.next()) {
                 BCrypt.Result result = BCrypt.verifyer().verify(userPassword.toCharArray(), rs.getString("password"));
                 if (result.verified)
-                    userFromDatabase = new User(rs.getString("username"), rs.getString("id"));
+                    userFromDatabase = new User(rs.getString("username"), rs.getString("id"), rs.getString("image"));
             }
         }
         catch (SQLException e) {
@@ -166,8 +166,8 @@ public class Database {
 
     // ------------------------------------------------------------------ //
 
-    public static void addUserToDatabase(String userUsername, String userPassword, String userId) {
-        String insertQueryUsers = "INSERT INTO users(username, password, id) VALUES(?, ?, ?)";
+    public static void addUserToDatabase(String userUsername, String userPassword, String userId, String userImageName) {
+        String insertQueryUsers = "INSERT INTO users(username, password, id, image) VALUES(?, ?, ?, ?)";
 
         try (Connection con = DatabaseConfig.getConnection();
              PreparedStatement insertPstUsers = con.prepareStatement(insertQueryUsers)) {
@@ -175,6 +175,7 @@ public class Database {
             insertPstUsers.setString(1, userUsername);
             insertPstUsers.setString(2, userPassword);
             insertPstUsers.setString(3, userId);
+            insertPstUsers.setString(4, userImageName);
             insertPstUsers.executeUpdate();
 
         } catch (SQLException e) {
@@ -455,6 +456,21 @@ public class Database {
         }
     }
 
+    public static void updateAvatarInDatabase(String newAvatar, String username) {
+        String updateQuery = "UPDATE users SET image = ? WHERE username = ?";
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst = con.prepareStatement(updateQuery)) {
+
+            pst.setString(1, newAvatar);
+            pst.setString(2, username);
+            pst.executeUpdate();
+
+        } catch (SQLException e) {
+            catchBlockCode(e);
+        }
+    }
+
 
     // ------------------------------------------------------------------ //
 
@@ -466,49 +482,9 @@ public class Database {
             return receiver + "_" + sender;
     }
 
-//
-//    // ------------------------------------------------------------------ //
-//
-//    public static void deleteRowsByUsername(String userUsername) {
-//        String deleteQuery = "DELETE FROM users_games WHERE username = ?";
-//        String updateQuery = "UPDATE users_info SET saved_games = ? WHERE username = ?";
-//
-//        try (Connection con = DatabaseConfig.getConnection();
-//             PreparedStatement pstDelete = con.prepareStatement(deleteQuery);
-//             PreparedStatement pstUpdate = con.prepareStatement(updateQuery)) {
-//
-//            pstDelete.setString(1, userUsername);
-//            pstDelete.executeUpdate();
-//
-//            pstUpdate.setInt(1,1);
-//            pstUpdate.setString(2,userUsername);
-//            pstUpdate.executeUpdate();
-//
-//        } catch (SQLException e) {
-//            catchBlockCode(e);
-//        }
-//    }
-//
-//    // ------------------------------------------------------------------ //
-//
     private static void catchBlockCode(SQLException e) {
         Logger lgr = Logger.getLogger(Database.class.getName());
         lgr.log(Level.SEVERE, e.getMessage(), e);
     }
-
-
-
-//
-//    private static SudokuGameData turnJsonIntoArray(ResultSet rs) throws SQLException {
-//        String json = rs.getString("game");
-//        Gson gson = new Gson();
-//        int[][] first = gson.fromJson(json, int[][].class);
-//
-//        json = rs.getString("solution");
-//        gson = new Gson();
-//        int[][] second = gson.fromJson(json, int[][].class);
-//
-//        return new SudokuGameData(first, second, rs.getString("difficulty"), rs.getString("timer"), rs.getInt("mistakes"));
-//    }
 
 }

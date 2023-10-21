@@ -153,18 +153,62 @@
                   <content>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                            <children>
-                              <VBox alignment="CENTER" layoutX="49.0" layoutY="12.0" prefHeight="200.0" prefWidth="200.0" spacing="15.0">
+                              <VBox alignment="CENTER" layoutX="-1.0" layoutY="9.0" prefHeight="207.0" prefWidth="300.0" spacing="10.0">
                                  <children>
-                                    <TextField fx:id="signupUsernameField" promptText="Username">
+                                    <TextField fx:id="signupUsernameField" maxWidth="200.0" minWidth="200.0" prefWidth="200.0" promptText="Username">
                                        <font>
                                           <Font name="Damascus Regular" size="14.0" />
                                        </font>
                                     </TextField>
-                                    <PasswordField fx:id="signupPasswordField" promptText="Password">
+                                    <PasswordField fx:id="signupPasswordField" maxWidth="200.0" minWidth="200.0" prefWidth="200.0" promptText="Password">
                                        <font>
                                           <Font name="Damascus Regular" size="14.0" />
                                        </font>
                                     </PasswordField>
+                                    <HBox alignment="CENTER" prefHeight="80.0" prefWidth="375.0" spacing="15.0">
+                                       <children>
+                                          <Label text="Choose an Avatar:" />
+                                          <HBox fx:id="maleAvatarHBoxS" alignment="CENTER" fillHeight="false" maxHeight="62.0" maxWidth="62.0" minHeight="62.0" minWidth="62.0">
+                                             <children>
+                                                <ImageView fx:id="male_AvatarImageS" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true">
+                                                   <image>
+                                                      <Image url="@../images/male.png" />
+                                                   </image>
+                                                   <cursor>
+                                                      <Cursor fx:constant="HAND" />
+                                                   </cursor>
+                                                </ImageView>
+                                             </children>
+                                             <HBox.margin>
+                                                <Insets />
+                                             </HBox.margin>
+                                             <padding>
+                                                <Insets top="-3.0" />
+                                             </padding>
+                                          </HBox>
+                                          <HBox fx:id="femaleAvatarHBoxS" alignment="CENTER" maxHeight="62.0" maxWidth="62.0" minHeight="62.0" minWidth="62.0">
+                                             <children>
+                                                <ImageView fx:id="female_AvatarImageS" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true">
+                                                   <image>
+                                                      <Image url="@../images/female.png" />
+                                                   </image>
+                                                   <cursor>
+                                                      <Cursor fx:constant="HAND" />
+                                                   </cursor>
+                                                </ImageView>
+                                             </children>
+                                             <padding>
+                                                <Insets top="-3.0" />
+                                             </padding>
+                                          </HBox>
+                                       </children>
+                                       <padding>
+                                          <Insets bottom="5.0" top="5.0" />
+                                       </padding>
+                                       <VBox.margin>
+                                          <Insets bottom="-5.0" />
+                                       </VBox.margin>
+                                    </HBox>
                                     <Button fx:id="signupButton" mnemonicParsing="false" onAction="#signupButtonOnClick" text="Signup">
                                        <font>
                                           <Font name="Damascus Regular" size="14.0" />
@@ -193,7 +237,7 @@
                                           <Label text="Profile Picture:" />
                                           <ImageView fx:id="userPictureImageView" fitHeight="90.0" fitWidth="90.0" pickOnBounds="true" preserveRatio="true">
                                              <image>
-                                                <Image url="@../images/gearshape.png" />
+                                                <Image url="@../images/male.png" />
                                              </image>
                                           </ImageView>
                                        </children>
@@ -227,7 +271,7 @@
                               <Font name="Damascus Regular" size="18.0" />
                            </font>
                            <VBox.margin>
-                              <Insets bottom="10.0" />
+                              <Insets bottom="5.0" />
                            </VBox.margin>
                         </Label>
                         <HBox alignment="CENTER" prefHeight="32.0" prefWidth="250.0" spacing="10.0">
@@ -244,9 +288,51 @@
                               <Button fx:id="settingPasswordSaveButton" mnemonicParsing="false" onAction="#settingsPasswordSaveButtonOnClick" text="Save" />
                            </children>
                         </HBox>
+                        <HBox alignment="CENTER" prefHeight="80.0" prefWidth="375.0" spacing="15.0">
+                           <children>
+                              <Label text="Change Your Avatar:" />
+                              <HBox fx:id="maleAvatarHBox" alignment="CENTER" fillHeight="false" maxHeight="62.0" maxWidth="62.0" minHeight="62.0" minWidth="62.0">
+                                 <children>
+                                    <ImageView fx:id="male_AvatarImage" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/male.png" />
+                                       </image>
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor>
+                                    </ImageView>
+                                 </children>
+                                 <HBox.margin>
+                                    <Insets />
+                                 </HBox.margin>
+                                 <padding>
+                                    <Insets top="-3.0" />
+                                 </padding>
+                              </HBox>
+                              <HBox fx:id="femaleAvatarHBox" alignment="CENTER" maxHeight="62.0" maxWidth="62.0" minHeight="62.0" minWidth="62.0">
+                                 <children>
+                                    <ImageView fx:id="female_AvatarImage" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/female.png" />
+                                       </image>
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor>
+                                    </ImageView>
+                                 </children>
+                                 <padding>
+                                    <Insets top="-3.0" />
+                                 </padding>
+                              </HBox>
+                              <Button fx:id="settingAvatarSaveButton" mnemonicParsing="false" onAction="#settingsAvatarSaveButtonOnClick" text="Save" />
+                           </children>
+                           <padding>
+                              <Insets bottom="5.0" top="5.0" />
+                           </padding>
+                        </HBox>
                         <Button fx:id="settingsCloseButton" alignment="CENTER" mnemonicParsing="false" onAction="#closeSettingsButtonOnClick" text="Close">
                            <VBox.margin>
-                              <Insets top="15.0" />
+                              <Insets />
                            </VBox.margin>
                         </Button>
                      </children>

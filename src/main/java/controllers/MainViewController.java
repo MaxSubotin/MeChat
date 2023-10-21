@@ -8,7 +8,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -34,8 +36,13 @@ import websockets.CustomWebSocketClient;
 
 public class MainViewController {
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+    // - - - - - - - - - - Variable Declaration  - - - - - - - - - - //
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
     public User MyUser = null;
     private Pane selectedChatBoxPane;
+    private HBox selectedAvatarHbox;
+    private ImageView selectedUserImage = null;
     private String selectedChatBoxUserId;
     private int newChatBoxCounter = 0;
     private CustomWebSocketClient webSocketClient;
@@ -46,9 +53,11 @@ public class MainViewController {
 
 
     @FXML
-    ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView;
+    ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, male_AvatarImageS, female_AvatarImage, female_AvatarImageS;
     @FXML
     VBox historyVBox, chatVBox;
+    @FXML
+    HBox maleAvatarHBox, maleAvatarHBoxS, femaleAvatarHBox, femaleAvatarHBoxS;
     @FXML
     TextField messageTextField, loginUsernameField, loginPasswordField, signupUsernameField, signupPasswordField, settingsUsernameField, settingsPasswordField;
     @FXML
@@ -56,12 +65,15 @@ public class MainViewController {
     @FXML
     Pane loginAndSignupPane, settingsPane;
     @FXML
-    Button closeProfileButton, loginButton, signupButton, settingsUsernameSaveButton, settingPasswordSaveButton, settingsCloseButton;
+    Button closeProfileButton, loginButton, signupButton, settingsUsernameSaveButton, settingPasswordSaveButton, settingsCloseButton, settingAvatarSaveButton;
     @FXML
     TitledPane theLoginTab,theSignupTab,theUserTab;
     @FXML
     ScrollPane chatScrollPane;
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+    // - - - - - - - - - Buttons OnClick Functions - - - - - - - - - //
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
     @FXML
     public void newChatButtonOnClick() {
@@ -124,7 +136,15 @@ public class MainViewController {
 
 
     @FXML
-    public void settingsButtonOnClick() { settingsPane.setVisible(true); }
+    public void settingsButtonOnClick() {
+        settingsPane.setVisible(true);
+
+        if (Objects.equals(MyUser.getUserImage(), "male"))
+            male_AvatarImageS.setStyle("-fx-border-color: skyblue; -fx-border-radius: 30px; -fx-border-width: 3px");
+        else
+            female_AvatarImageS.setStyle("-fx-border-color: skyblue; -fx-border-radius: 30px; -fx-border-width: 3px");
+
+    }
 
     @FXML
     public void closeSettingsButtonOnClick() { settingsPane.setVisible(false); }
@@ -174,10 +194,25 @@ public class MainViewController {
 
     }
 
+    @FXML
+    public void settingsAvatarSaveButtonOnClick() {
+        if (selectedAvatarHbox.getId().equals("maleAvatarHBox")) {
+            Database.updateAvatarInDatabase("male", MyUser.getName());
+            MyUser.setUserImage("male");
+        }
+        else {
+            Database.updateAvatarInDatabase("female", MyUser.getName());
+            MyUser.setUserImage("female");
+        }
+    }
+
 
     @FXML
     public void profileButtonOnClick() {
         loginAndSignupPane.setVisible(true);
+        if (MyUser != null) {
+            showUserTab();
+        }
     }
 
     @FXML
@@ -204,9 +239,16 @@ public class MainViewController {
         // Getting the username and hashing the password
         String username = signupUsernameField.getText();
         String HashedPassword = BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray());
+        String userImageName = "male";
 
         // Check that the username and password are in a correct format like length, special characters and the like
         // ?
+
+        // Check that the user has selected an avatar
+        if (selectedUserImage == null)
+            return; // TODO: SHOW AND ERROR MESSAGE
+        else
+            userImageName = selectedUserImage.getId().split("_")[0]; // the id is "male_AvatarImageS"
 
         // Check that username is unique
         if (!Database.isUsernameUnique(username)) return;
@@ -215,14 +257,35 @@ public class MainViewController {
         String userId = UniqueUserIdGenerator.generateUniqueUserId();
 
         // Add user to database and Login
-        MyUser = new User(username, userId);
-        Database.addUserToDatabase(username, HashedPassword, userId); // saving the hashed version of the password
+        MyUser = new User(username, userId, userImageName);
+        Database.addUserToDatabase(username, HashedPassword, userId, userImageName); // saving the hashed version of the password
+
+        selectedUserImage = null; // cleaning the selected image
 
         // Log the user into his account
         if (handleUserLogin(MyUser))
             cleanSignupForm();
     }
 
+    @FXML
+    public void avatarImageOnClick(MouseEvent event) {
+        // Removing old border
+        if (selectedAvatarHbox != null) {
+            selectedAvatarHbox.setStyle("-fx-border-radius: 30px");
+        }
+
+        // Creating and adding new border to the selected avatar and saving the selection
+        ImageView newUserImage = (ImageView) event.getSource();
+        HBox selectedAvatar = (HBox) newUserImage.getParent();
+        selectedAvatar.setStyle("-fx-border-color: skyblue; -fx-border-radius: 30px; -fx-border-width: 3px");
+        selectedAvatarHbox = selectedAvatar;
+        selectedUserImage = newUserImage;
+    }
+
+    
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+    // - - - - - - - - - - - User Login Logic  - - - - - - - - - - - //
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
     private boolean handleUserLogin(User user) {
         if (user == null) return false;
@@ -324,6 +387,9 @@ public class MainViewController {
 
 
 
+
+
+
     // Helper Functions
 
     public void turnChatInvisible() {
@@ -358,6 +424,12 @@ public class MainViewController {
         userUsernameLabel.setText(MyUser.getName());
         theUserTab.setVisible(true);
         theUserTab.setExpanded(true);
+        try {
+            userPictureImageView.setImage(new Image(getClass().getResource("/images/" + MyUser.getUserImage()).toExternalForm()));
+        } catch (NullPointerException e) {
+            userPictureImageView.setImage(new Image("/images/male.png"));
+            e.printStackTrace();
+        }
     }
 
     private void addUsersChatsToScreen() {

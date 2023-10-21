@@ -3,11 +3,12 @@ package util;
 import java.util.ArrayList;
 
 public class User {
-    private String name, id;
+    private String name, id, userImage;
 
-    public User(String _name, String _id) {
+    public User(String _name, String _id, String _userImage) {
         this.name = _name;
         this.id = _id;
+        this.userImage = _userImage + ".png"; // this will be male.png or female.png and will be decided be the database (male or female)
     }
 
     // getters and setters
@@ -25,5 +26,13 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUserImage() {
+        return userImage;
+    }
+
+    public void setUserImage(String image) {
+        this.userImage = image + ".png";
     }
 }
