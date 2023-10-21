@@ -120,6 +120,28 @@ public class Database {
         return userId;
     }
 
+    public static String getSessionByUserId(String id) {
+        String queryForUser = "SELECT * FROM session_tokens WHERE id = ?";
+        String session = null;
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(queryForUser)) {
+
+            // Find the user in the database and create a User object
+            pst1.setString(1, id);
+            ResultSet rs = pst1.executeQuery();
+
+            if (rs.next()) {
+                session = rs.getString("session_token");
+            }
+        }
+        catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+        return session;
+    }
+
     public static String getUserIdByUsername(String userUsername) {
         String queryForUser = "SELECT * FROM users WHERE username = ?";
         String userId = null;

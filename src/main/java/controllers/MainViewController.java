@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -139,11 +140,12 @@ public class MainViewController {
     public void settingsButtonOnClick() {
         settingsPane.setVisible(true);
 
-        if (Objects.equals(MyUser.getUserImage(), "male"))
-            male_AvatarImageS.setStyle("-fx-border-color: skyblue; -fx-border-radius: 30px; -fx-border-width: 3px");
-        else
-            female_AvatarImageS.setStyle("-fx-border-color: skyblue; -fx-border-radius: 30px; -fx-border-width: 3px");
-
+        if (MyUser != null) {
+            if (Objects.equals(MyUser.getUserImage(), "male"))
+                male_AvatarImageS.setStyle("-fx-border-color: skyblue; -fx-border-radius: 30px; -fx-border-width: 3px");
+            else
+                female_AvatarImageS.setStyle("-fx-border-color: skyblue; -fx-border-radius: 30px; -fx-border-width: 3px");
+        }
     }
 
     @FXML
@@ -294,7 +296,7 @@ public class MainViewController {
         // Initialize the client web socket
         try {
             String session = UUID.randomUUID().toString(); // Generate a unique session or token
-            webSocketClient = new CustomWebSocketClient(new URI("ws://localhost:8888/socket?session=" + session), MyUser.getName()) {
+            webSocketClient = new CustomWebSocketClient(new URI("ws://localhost:8888/socket?session=" + session), MyUser.getName(), getCurrentScene()) {
 
                 @Override
                 public void onMessage(String text) {
@@ -360,8 +362,9 @@ public class MainViewController {
                         if (code == 1006) {
                             showAlertWithMessage(Alert.AlertType.ERROR,"Error",MyUser.getName() + " has disconnected from the ChatServer; Code: " + code + " " + reason + "\n");
 
-                            Stage stage = (Stage) profileButton.getScene().getWindow();
+                            Stage stage = (Stage) getCurrentScene().getWindow();
                             stage.close();
+                            Database.removeUserSession(MyUser.getId());
                         }
 
                     });
@@ -369,8 +372,11 @@ public class MainViewController {
 
             };
 
-            Database.addSessionToDataBase(MyUser.getId(), session); // adding the connecting to the database to keep track of connected users
-            webSocketClient.connect();
+            if (Database.getSessionByUserId(MyUser.getId()) == null) {
+                Database.addSessionToDataBase(MyUser.getId(), session); // adding the connecting to the database to keep track of connected users
+                webSocketClient.connect();
+            } else
+                webSocketClient.onError(new Exception());
 
         } catch (URISyntaxException ex) {
             showAlertWithMessage(Alert.AlertType.ERROR, "Error", "URISyntaxException, Not a valid WebSocket URI\n" + ex);
@@ -380,7 +386,7 @@ public class MainViewController {
         // Show the USER tab and show users chats
         showUserTab();
         addUsersChatsToScreen();
-        cleanLoginForm();
+
 
         return true;
     }
@@ -503,5 +509,7 @@ public class MainViewController {
     public void setConnectedLabelOn() { connectedLabel.setText("connected"); }
     public void setConnectedLabelOff() { connectedLabel.setText("disconnected"); }
     public String getConnectedLabel() { return connectedLabel.getText(); }
+
+    public Scene getCurrentScene() { return profileButton.getScene();}
 
 }
