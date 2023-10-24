@@ -246,11 +246,14 @@ public class MainViewController {
         if (!(RegexChecker.isValidUsername(username) && RegexChecker.isValidPassword(signupPasswordField.getText()))) {
             // Show and error message
             showAlertWithMessage(Alert.AlertType.ERROR,"Error", "The username or password are incorrect.\nUsername: 1 lower case letter, 1 upper case letter, 1 number, no special character, up-to 12 characters long. \nPassword: 1 lower case letter, 1 upper case letter, 1 number, can have special character, up-to 12 characters long.");
+            return;
         }
 
         // Check that the user has selected an avatar
-        if (selectedUserImage == null)
-            showAlertWithMessage(Alert.AlertType.ERROR,"Error", "Please select an avatar.");
+        if (selectedUserImage == null) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Error", "Please select an avatar.");
+            return;
+        }
         else
             userImageName = selectedUserImage.getId().split("_")[0]; // the id is "male_AvatarImageS"
 
