@@ -181,8 +181,7 @@ public class MainViewController {
     @FXML
     public void settingsPasswordSaveButtonOnClick() {
         // Check new password with regex
-        // if it is ok then:
-        if (true) {
+        if (RegexChecker.isValidPassword(signupPasswordField.getText())) {
             // Hashing the password
             String HashedPassword = BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray());
 
@@ -244,11 +243,14 @@ public class MainViewController {
         String userImageName = "male";
 
         // Check that the username and password are in a correct format like length, special characters and the like
-        // ?
+        if (!(RegexChecker.isValidUsername(username) && RegexChecker.isValidPassword(signupPasswordField.getText()))) {
+            // Show and error message
+            showAlertWithMessage(Alert.AlertType.ERROR,"Error", "The username or password are incorrect.\nUsername: 1 lower case letter, 1 upper case letter, 1 number, no special character, up-to 12 characters long. \nPassword: 1 lower case letter, 1 upper case letter, 1 number, can have special character, up-to 12 characters long.");
+        }
 
         // Check that the user has selected an avatar
         if (selectedUserImage == null)
-            return; // TODO: SHOW AND ERROR MESSAGE
+            showAlertWithMessage(Alert.AlertType.ERROR,"Error", "Please select an avatar.");
         else
             userImageName = selectedUserImage.getId().split("_")[0]; // the id is "male_AvatarImageS"
 
