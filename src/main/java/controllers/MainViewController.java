@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -50,11 +51,11 @@ public class MainViewController {
     private Message message = null;
 
     // Create a Gson object for JSON serialization/deserialization.
-    private final Gson gson = new GsonBuilder().registerTypeAdapter(Message.class, new MessageAdapter()).create();
+    // private final Gson gson = new GsonBuilder().registerTypeAdapter(Message.class, new MessageAdapter()).create();
 
 
     @FXML
-    ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, male_AvatarImageS, female_AvatarImage, female_AvatarImageS;
+    ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, male_AvatarImageS, female_AvatarImage, female_AvatarImageS, settingsDeleteAccountButton;
     @FXML
     VBox historyVBox, chatVBox;
     @FXML
@@ -122,7 +123,7 @@ public class MainViewController {
         message = new Message(text, MyUser.getId(), receiverId, formattedTime, conversationId);
 
         // Turn Message object into json format
-        String jsonMessage = gson.toJson(message);
+        String jsonMessage = webSocketClient.gson.toJson(message);
 
         // Send the message in json format to the chat server where it will be sent to the correct user
         webSocketClient.send(jsonMessage);
@@ -162,15 +163,8 @@ public class MainViewController {
             Database.updateUsernameInDatabase(newUsername, MyUser.getName());
             MyUser.setName(newUsername);
 
-            // Create a system message object
-            Message sysMessage = new Message("USERNAME//CHANGED//" + newUsername, MyUser.getId(), MyUser.getId(), new Timestamp(System.currentTimeMillis()).toString() ,"-1");
-            sysMessage.setIsSystemMessage(true);
+            webSocketClient.sendMessageToServer(MyUser, "USERNAME//CHANGED//" + newUsername);
 
-            // Turn Message object into json format
-            String jsonSysMessage = gson.toJson(sysMessage);
-
-            // Send message to users that you have changed your name
-            webSocketClient.send(jsonSysMessage);
             settingsUsernameField.clear();
         } else {
             // Show and error message
@@ -204,6 +198,15 @@ public class MainViewController {
         else {
             Database.updateAvatarInDatabase("female", MyUser.getName());
             MyUser.setUserImage("female");
+        }
+    }
+
+    @FXML
+    public void settingsDeleteAccountButtonOnClick() {
+        if (MyUser != null) {
+            Database.deleteUser(MyUser.getId());
+            webSocketClient.sendMessageToServer(MyUser, "USERNAME//DELETED//" + MyUser.getName());
+            closeChatAppWindow();
         }
     }
 
@@ -325,6 +328,40 @@ public class MainViewController {
                                     if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) { chatNameLabel.setText(receivedMessage.getText().split("//")[2]); }
                                     addUsersChatsToScreen();
                                 });
+                            } else if (text.contains("NEW//CHAT//CREATED//")) { // This case is not yet implemented
+                                Platform.runLater(() -> {
+                                    String currentChat = selectedChatBoxPane.getId();
+                                    addUsersChatsToScreen();
+                                    for (Node child: historyVBox.getChildren()) {
+                                        if (Objects.equals(child.getId(), currentChat)) {
+                                            System.out.println("Inside the if statement");
+                                            selectedChatBoxPane = (Pane) child;
+                                            selectedChatBoxPane.setStyle("-fx-border-color: skyblue; -fx-border-radius: 15px; -fx-border-width: 0.5px");
+                                        }
+                                    }
+                                });
+                            } else if (text.contains("USERNAME//DELETED//")) {
+                                Platform.runLater(() -> {
+                                    String currentChat = selectedChatBoxPane.getId();
+                                    if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) {
+                                        cleanChatBubbles();
+                                        currentChat = null;
+                                    }
+                                    addUsersChatsToScreen(); // This resets the selectedChatBoxPane
+                                    if (currentChat != null) {
+                                        for (Node child: historyVBox.getChildren()) {
+                                            if (Objects.equals(child.getId(), currentChat)) {
+                                                System.out.println("Inside the if statement");
+                                                selectedChatBoxPane = (Pane) child;
+                                                selectedChatBoxPane.setStyle("-fx-border-color: skyblue; -fx-border-radius: 15px; -fx-border-width: 0.5px");
+                                            }
+                                        }
+                                    } else {
+                                        selectedChatBoxUserId = null;
+                                        selectedChatBoxPane = null;
+                                        connectedLabel.setText("");// this does not seem to take effect
+                                    }
+                                });
                             }
                         }
                     }
@@ -365,16 +402,12 @@ public class MainViewController {
                 public void onClose(int code, String reason, boolean remote) {
                     Platform.runLater(() -> {
                         if (code == 1006) {
-                            showAlertWithMessage(Alert.AlertType.ERROR,"Error",MyUser.getName() + " has disconnected from the ChatServer; Code: " + code + " " + reason + "\n");
-
-                            Stage stage = (Stage) getCurrentScene().getWindow();
-                            stage.close();
-                            Database.removeUserSession(MyUser.getId());
+                            showAlertWithMessage(Alert.AlertType.ERROR, "Error", MyUser.getName() + " has disconnected from the ChatServer; Code: " + code + " " + reason + "\n");
+                            closeChatAppWindow();
                         }
-
+                        System.out.println("Close method of ClientWebSocket was called.");
                     });
                 }
-
             };
 
             if (Database.getSessionByUserId(MyUser.getId()) == null) {
@@ -392,13 +425,19 @@ public class MainViewController {
         showUserTab();
         addUsersChatsToScreen();
 
-
         return true;
     }
 
 
 
+    public void closeChatAppWindow() {
+        Stage stage = (Stage) getCurrentScene().getWindow();
+        stage.close();
+        if (MyUser != null)
+            Database.removeUserSession(MyUser.getId());
 
+        System.exit(0);
+    }
 
 
     // Helper Functions

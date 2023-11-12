@@ -262,9 +262,9 @@
       </Pane>
       <Pane fx:id="settingsPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: rgba(0,0,0,0.75);" visible="false">
          <children>
-            <Pane layoutX="263.0" layoutY="127.0" prefHeight="225.0" prefWidth="375.0" style="-fx-background-color: #f5f5f5; -fx-background-radius: 5; -fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;">
+            <Pane layoutX="263.0" layoutY="127.0" prefHeight="270.0" prefWidth="375.0" style="-fx-background-color: #f5f5f5; -fx-background-radius: 5; -fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;">
                <children>
-                  <VBox alignment="CENTER" prefHeight="225.0" prefWidth="375.0">
+                  <VBox alignment="CENTER" prefHeight="270.0" prefWidth="375.0">
                      <children>
                         <Label alignment="CENTER" prefHeight="17.0" prefWidth="375.0" text="Edit your information here:">
                            <font>
@@ -330,9 +330,29 @@
                               <Insets bottom="5.0" top="5.0" />
                            </padding>
                         </HBox>
+                        <HBox alignment="TOP_CENTER" maxHeight="50.0" prefHeight="35.0" prefWidth="200.0" spacing="50.0">
+                           <children>
+                              <HBox alignment="CENTER" maxHeight="35.0" prefHeight="35.0" prefWidth="150.0" spacing="10.0">
+                                 <children>
+                                    <Label text="Delete Your Account" />
+                                    <ImageView fx:id="settingsDeleteAccountButton" fitHeight="30.0" fitWidth="30.0" onMouseClicked="#settingsDeleteAccountButtonOnClick" pickOnBounds="true" preserveRatio="true">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor>
+                                       <image>
+                                          <Image url="@../images/trash.png" />
+                                       </image>
+                                    </ImageView>
+                                 </children>
+                                 <HBox.margin>
+                                    <Insets left="10.0" right="10.0" />
+                                 </HBox.margin>
+                              </HBox>
+                           </children>
+                        </HBox>
                         <Button fx:id="settingsCloseButton" alignment="CENTER" mnemonicParsing="false" onAction="#closeSettingsButtonOnClick" text="Close">
                            <VBox.margin>
-                              <Insets />
+                              <Insets top="5.0" />
                            </VBox.margin>
                         </Button>
                      </children>

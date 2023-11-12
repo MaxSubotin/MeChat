@@ -408,6 +408,62 @@ public class Database {
 
     }
 
+    public static void deleteUser(String userId) {
+        String deleteQueryUsers = "DELETE FROM users WHERE id = ?";
+        String deleteQuerySession = "DELETE FROM session_tokens WHERE id = ?";
+        String deleteQueryConversations = "DELETE FROM conversations WHERE participant1 = ? OR participant2 = ?";
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(deleteQueryUsers);
+             PreparedStatement pst2 = con.prepareStatement(deleteQuerySession);
+             PreparedStatement pst3 = con.prepareStatement(deleteQueryConversations)) {
+
+            pst1.setString(1, userId);
+            pst1.executeUpdate();
+
+            pst2.setString(1, userId);
+            pst2.executeUpdate();
+
+            ArrayList<String> chatTableNames = Database.findAllChats(con, userId);
+            if (!chatTableNames.isEmpty()) {
+                for (String name : chatTableNames) {
+                    PreparedStatement pst = con.prepareStatement("DROP TABLE " + name);
+                    pst.executeUpdate();
+                }
+            }
+
+            pst3.setString(1, userId);
+            pst3.setString(2, userId);
+            pst3.executeUpdate();
+
+        } catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+    }
+
+    private static ArrayList<String> findAllChats(Connection con, String userId) {
+        ArrayList<String> list = new ArrayList<String>();
+        String query = "SELECT * FROM conversations WHERE participant1 = ? OR participant2 = ?";
+
+        try (PreparedStatement pst = con.prepareStatement(query)) {
+
+            pst.setString(1, userId);
+            pst.setString(2, userId);
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+                String tableName = rs.getString("participant1") + "_" + rs.getString("participant2") + "_" + rs.getString("conversation_id");
+                list.add(tableName);
+            }
+
+        } catch (SQLException e) {
+            catchBlockCode(e);
+        }
+
+        return list;
+    }
+
     public static void cleanUserSessionTabel() {
         String removeQuery = "DELETE FROM session_tokens";
 

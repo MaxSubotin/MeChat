@@ -1,4 +1,5 @@
 package websockets;
+import com.google.gson.Gson;
 import database.Database;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -6,12 +7,20 @@ import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import util.Message;
+import util.MessageAdapter;
+import util.User;
+import com.google.gson.GsonBuilder;
 
 import java.net.URI;
+import java.sql.Timestamp;
 
 public class CustomWebSocketClient extends WebSocketClient {
     private final String username;
     private final Scene scene;
+
+    public final Gson gson = new GsonBuilder().registerTypeAdapter(Message.class, new MessageAdapter()).create();
+
 
     public CustomWebSocketClient(URI serverURI, String _username, Scene _scene) {
         super(serverURI);
@@ -45,6 +54,18 @@ public class CustomWebSocketClient extends WebSocketClient {
             String userId = Database.getUserIdByUsername(this.username);
             Database.removeUserSession(userId);
         });
+    }
+
+    public void sendMessageToServer(User user, String message) {
+        // Create a system message object
+        Message sysMessage = new Message(message, user.getId(), user.getId(), new Timestamp(System.currentTimeMillis()).toString() ,"-1");
+        sysMessage.setIsSystemMessage(true);
+
+        // Turn Message object into json format
+        String jsonSysMessage = gson.toJson(sysMessage);
+
+        // Send message to users that you have changed your name
+        send(jsonSysMessage);
     }
 
 }
