@@ -1,4 +1,4 @@
-package app.mechat;
+package database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -30,7 +30,8 @@ public class DatabaseConfig {
             config.setUsername(user);
             config.setPassword(password);
 
-            config.setMaximumPoolSize(10); // Adjust this as per your requirement
+            config.setMaximumPoolSize(1); // Adjust this as per your requirement
+            config.setConnectionTimeout(10000);
             dataSource = new HikariDataSource(config);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -43,6 +44,10 @@ public class DatabaseConfig {
 
     public static Connection getConnection() throws SQLException {
         return dataSource.getConnection();
+    }
+
+    public static String getDbName() {
+        return dbName;
     }
 }
 
