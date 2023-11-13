@@ -1,6 +1,5 @@
 package controllers;
 
-import com.google.gson.GsonBuilder;
 import database.Database;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -21,7 +20,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -31,7 +29,6 @@ import java.util.UUID;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 
-import com.google.gson.Gson;
 import util.*;
 import websockets.CustomWebSocketClient;
 
@@ -86,7 +83,7 @@ public class MainViewController {
         // Adding a new chat box to the screen, waiting for the user to input the receiver's name/number
         try {
             // Add the chat box to the screen
-            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/newChatBox.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/createChatBoxComponent.fxml"));
             Pane newChatBoxPane = fxmlLoader.load();
             newChatBoxCounter++;
 
@@ -264,7 +261,7 @@ public class MainViewController {
         if (!Database.isUsernameUnique(username)) return;
 
         // Generate a unique user id
-        String userId = UniqueUserIdGenerator.generateUniqueUserId();
+        String userId = IdGenerator.generateUniqueUserId();
 
         // Add user to database and Login
         MyUser = new User(username, userId, userImageName);
@@ -373,7 +370,7 @@ public class MainViewController {
                             Platform.runLater(() -> {
                                 try {
                                     // Creating a new message bubble on the screen and adding the users text into it
-                                    FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBubble.fxml"));
+                                    FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBubbleComponent.fxml"));
                                     HBox chatBubble = fxmlLoader.load();
 
                                     ChatBubbleController controller = fxmlLoader.getController();
@@ -489,7 +486,7 @@ public class MainViewController {
         ArrayList<Chat> usersChats = Database.getUsersChatsFromDatabase(MyUser.getId());
         for (Chat chat: usersChats) {
             try {
-                FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBox.fxml"));
+                FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
                 Pane chatBoxPane = fxmlLoader.load();
                 chatBoxPane.setId(Database.compareStrings(chat.getSender(), chat.getReceiver()) + "_" + chat.getConversation_id());
                 chatBoxPane.setCursor(Cursor.HAND);

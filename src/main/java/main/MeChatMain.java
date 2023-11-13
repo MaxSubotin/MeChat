@@ -14,7 +14,7 @@ public class MeChatMain extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/main-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/mainView.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 900, 602, Color.web("rgba(0, 0, 0, 0.75)"));
 
         MainViewController mainViewController = fxmlLoader.getController();

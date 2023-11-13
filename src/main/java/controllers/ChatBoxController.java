@@ -67,7 +67,7 @@ public class ChatBoxController {
         try {
             // For each message in the chat we make a new bubble and add the text into it
             for (Message message: listOfMessages) {
-                FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBubble.fxml"));
+                FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBubbleComponent.fxml"));
                 HBox chatBubblePane = fxmlLoader.load();
                 ChatBubbleController controller = fxmlLoader.getController();
                 controller.setMessageBubbleLabel(message.getText());

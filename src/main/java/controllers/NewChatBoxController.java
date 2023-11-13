@@ -36,7 +36,7 @@ public class NewChatBoxController {
             if (tempNameId == null) return; // user was not found, do nothing.
 
             // Create the conversation chat box
-            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBox.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
             Pane chatBoxPane = fxmlLoader.load();
 
             // Setting the name of the contact and an on-click event
