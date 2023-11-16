@@ -1,12 +1,18 @@
 package util;
 
+import database.Database;
+import websockets.CustomWebSocketClient;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Chat {
 
     private ArrayList<Message> messages;
-    private String sender, receiver;
-    private boolean active;
+    private String sender, receiver; // these are user id, not username
+    private boolean active; // delete this?
     private int conversation_id;
 
     public Chat(ArrayList<Message> _messages, String _sender, String _receiver, int _conversation_id) {
@@ -15,6 +21,26 @@ public class Chat {
         this.receiver = _receiver;
         this.conversation_id = _conversation_id;
         this.active = false;
+    }
+
+    public void sendMessage(CustomWebSocketClient sender, String text) {
+        // Get current timestamp
+        LocalDateTime currentTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedTime = currentTime.format(formatter);
+
+        // Create a message object and the controller to access methods
+        Message message = new Message(text, getSender(), getReceiver(), formattedTime, Integer.toString(getConversation_id()));
+
+        // Adding the new message to the array and the database
+        messages.add(message);
+        Database.addMessageToDatabase(message, getConversation_id());
+
+        // Turn Message object into json format
+        String jsonMessage = sender.gson.toJson(message);
+
+        // Send the message in json format to the chat server where it will be sent to the correct user
+        sender.send(jsonMessage);
     }
 
     // getters and setters

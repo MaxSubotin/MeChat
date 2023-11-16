@@ -22,10 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 
@@ -38,14 +35,18 @@ public class MainViewController {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
     // - - - - - - - - - - Variable Declaration  - - - - - - - - - - //
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+
+    public HashMap<Pane, Chat> userChats = new HashMap<>();
+
+
     public User MyUser = null;
+    public Chat currentChat = null;
     private Pane selectedChatBoxPane;
     private HBox selectedAvatarHbox;
     private ImageView selectedUserImage = null;
     private String selectedChatBoxUserId;
     private int newChatBoxCounter = 0;
     private CustomWebSocketClient webSocketClient;
-    private Message message = null;
 
     // Create a Gson object for JSON serialization/deserialization.
     // private final Gson gson = new GsonBuilder().registerTypeAdapter(Message.class, new MessageAdapter()).create();
@@ -105,29 +106,7 @@ public class MainViewController {
         String text = messageTextField.getText();
         if (text == null || text.isEmpty()) return;
 
-        // Get current timestamp
-        LocalDateTime currentTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedTime = currentTime.format(formatter);
-
-        // Get current conversation id and receiver userId
-        String conversationId = selectedChatBoxPane.getId().split("_")[2];
-        String receiverId = selectedChatBoxPane.getId().split("_")[0];
-        if (Objects.equals(receiverId, MyUser.getId()))
-            receiverId = selectedChatBoxPane.getId().split("_")[1]; // change the receiver id to the other id of the conversation if needed.
-
-        // Create a message object and the controller to access methods
-        message = new Message(text, MyUser.getId(), receiverId, formattedTime, conversationId);
-
-        // Turn Message object into json format
-        String jsonMessage = webSocketClient.gson.toJson(message);
-
-        // Send the message in json format to the chat server where it will be sent to the correct user
-        webSocketClient.send(jsonMessage);
-
-        // Add the message to the database
-        String[] splitChatBoxName = this.getSelectedChatBoxPane().getId().split("_");
-        Database.addMessageToDatabase(message, Integer.parseInt(splitChatBoxName[2]));
+        currentChat.sendMessage(webSocketClient, text);
 
         messageTextField.clear(); // Removing the text from the textfield
         getFocus();
@@ -154,6 +133,11 @@ public class MainViewController {
         String newUsername = settingsUsernameField.getText();
 
         // Check new username with regex
+        if (!RegexChecker.isValidUsername(newUsername)) {
+            // Show and error message
+            showAlertWithMessage(Alert.AlertType.ERROR,"Error", "Your new username is not good enough.\nTry a different one.");
+            return;
+        }
 
         // Check newUsername in database and update the database
         if (Database.isUsernameUnique(newUsername)) {
@@ -377,11 +361,12 @@ public class MainViewController {
                                     controller.setMessageBubbleLabel(receivedMessage.getText());
                                     controller.setMessage(receivedMessage);
 
-                                    if (message != null) {
-                                        chatBubble.setAlignment(Pos.CENTER_RIGHT); // The users messages appear of the right side
-                                        controller.setMessageBubbleLabelColorBlue(); // The users messages are colored sky-blue
-                                        message = null; // nullify the current message after it is sent to get the app ready for the next message broadcast
-                                    } else
+
+                                    if (Objects.equals(receivedMessage.getSender(), MyUser.getId())) {
+                                        controller.setMessageBubbleLabelColorBlue();
+                                        chatBubble.setAlignment(Pos.CENTER_RIGHT);
+                                    }
+                                    else
                                         chatBubble.setAlignment(Pos.CENTER_LEFT);
 
                                     // Add message bubble to the screen
@@ -495,6 +480,9 @@ public class MainViewController {
                 controller.setMainViewControllerReference(this);
                 controller.setNameLabel(Database.getUsernameById(chat.getReceiver()));
                 getHistoryVBox().getChildren().add(chatBoxPane);
+
+                this.userChats.put(chatBoxPane, chat); // adding the pane - chat reference to the hashmap for later use
+                chat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
