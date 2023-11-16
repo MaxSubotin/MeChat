@@ -141,15 +141,10 @@ public class MainViewController {
         }
 
         // Check newUsername in database and update the database
-        if (Database.isUsernameUnique(newUsername)) {
-            Database.updateUsernameInDatabase(newUsername, MyUser.getName());
-            MyUser.setName(newUsername);
-
+        if (MyUser.setName(newUsername)) {
             webSocketClient.sendMessageToServer(MyUser, "USERNAME//CHANGED//" + newUsername);
-
             settingsUsernameField.clear();
         } else {
-            // Show and error message
             showAlertWithMessage(Alert.AlertType.ERROR,"Error", newUsername + " is already taken.\nTry a different username.");
         }
     }
@@ -158,11 +153,7 @@ public class MainViewController {
     public void settingsPasswordSaveButtonOnClick() {
         // Check new password with regex
         if (RegexChecker.isValidPassword(signupPasswordField.getText())) {
-            // Hashing the password
-            String HashedPassword = BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray());
-
-            // Update the database
-            Database.updatePasswordInDatabase(HashedPassword, MyUser.getName());
+            MyUser.updatePassword(BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray()));
             signupPasswordField.clear();
         } else {
             // Show and error message
@@ -174,11 +165,9 @@ public class MainViewController {
     @FXML
     public void settingsAvatarSaveButtonOnClick() {
         if (selectedAvatarHbox.getId().equals("maleAvatarHBox")) {
-            Database.updateAvatarInDatabase("male", MyUser.getName());
             MyUser.setUserImage("male");
         }
         else {
-            Database.updateAvatarInDatabase("female", MyUser.getName());
             MyUser.setUserImage("female");
         }
     }
