@@ -43,7 +43,7 @@ public class MainViewController {
     private HBox selectedAvatarHbox;
     private ImageView selectedUserImage = null;
     private String selectedChatBoxUserId;
-    private int newChatBoxCounter = 0;
+    private int temporaryChatBoxCounter = 0;
     private CustomWebSocketClient webSocketClient;
 
     // Create a Gson object for JSON serialization/deserialization.
@@ -76,17 +76,17 @@ public class MainViewController {
     @FXML
     public void newChatButtonOnClick() {
         // Counting the new chat boxes, only one on the screen at a time
-        if (newChatBoxCounter > 0) return;
+        if (temporaryChatBoxCounter > 0) return;
         if (MyUser == null) return;
 
         // Adding a new chat box to the screen, waiting for the user to input the receiver's name/number
         try {
             // Add the chat box to the screen
-            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/createChatBoxComponent.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/temporaryChatBoxComponent.fxml"));
             Pane newChatBoxPane = fxmlLoader.load();
-            newChatBoxCounter++;
+            temporaryChatBoxCounter++;
 
-            NewChatBoxController controller = fxmlLoader.getController();
+            TemporaryChatBoxController controller = fxmlLoader.getController();
             controller.setMainViewControllerReference(this); // Giving a reference to the main controller for communication
             historyVBox.getChildren().add(newChatBoxPane);
             getFocus();
@@ -530,9 +530,9 @@ public class MainViewController {
 
     public void setSelectedChatBoxUserId(String selectedChatBoxName) { this.selectedChatBoxUserId = selectedChatBoxName; }
 
-    public int getNewChatBoxCounter() { return newChatBoxCounter; }
+    public int getTemporaryChatBoxCounter() { return temporaryChatBoxCounter; }
 
-    public void setNewChatBoxCounter(int newChatBoxCounter) { this.newChatBoxCounter = newChatBoxCounter; }
+    public void setTemporaryChatBoxCounter(int temporaryChatBoxCounter) { this.temporaryChatBoxCounter = temporaryChatBoxCounter; }
 
     public void setConnectedLabelOn() { connectedLabel.setText("connected"); }
     public void setConnectedLabelOff() { connectedLabel.setText("disconnected"); }

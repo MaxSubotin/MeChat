@@ -14,7 +14,7 @@ import util.RegularChat;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class NewChatBoxController {
+public class TemporaryChatBoxController {
 
     @FXML
     TextField nameTextField;
@@ -55,7 +55,7 @@ public class NewChatBoxController {
             int tempSize = mainViewControllerReference.getHistoryVBox().getChildren().size();
             mainViewControllerReference.getHistoryVBox().getChildren().remove(tempSize-1);
             mainViewControllerReference.getHistoryVBox().getChildren().add(chatBoxPane);
-            mainViewControllerReference.setNewChatBoxCounter(0); // Reducing the counter so that the user could add another chat
+            mainViewControllerReference.setTemporaryChatBoxCounter(0); // Reducing the counter so that the user could add another chat
             mainViewControllerReference.getFocus();
 
             // Giving a reference to the main controller for communication
