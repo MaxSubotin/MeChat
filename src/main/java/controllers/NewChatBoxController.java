@@ -36,7 +36,10 @@ public class NewChatBoxController {
 
             // Find the userId of the person we want to chat with
             String tempNameId = Database.getUserIdByUsername(tempName);
-            if (tempNameId == null) return; // user was not found, do nothing. // TODO: add error message
+            if (tempNameId == null) {
+                mainViewControllerReference.showAlertWithMessage(Alert.AlertType.ERROR, "User not found", "Could not find a user with the name " + tempName + ", try a different one.");
+                return; // user was not found, do nothing.
+            }
 
             // Create the conversation chat box
             FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
