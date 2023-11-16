@@ -15,7 +15,10 @@ public class RegularChat implements ChatMethods {
     private int conversation_id;
 
     public RegularChat(ArrayList<Message> _messages, String _sender, String _receiver, int _conversation_id) {
-        this.messages = _messages;
+        if (_messages == null)
+            this.messages = new ArrayList<>();
+        else
+            this.messages = _messages;
         this.sender = _sender;
         this.receiver = _receiver;
         this.conversation_id = _conversation_id;

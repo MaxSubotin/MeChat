@@ -8,8 +8,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
+import util.Message;
+import util.RegularChat;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class NewChatBoxController {
 
@@ -33,7 +36,7 @@ public class NewChatBoxController {
 
             // Find the userId of the person we want to chat with
             String tempNameId = Database.getUserIdByUsername(tempName);
-            if (tempNameId == null) return; // user was not found, do nothing.
+            if (tempNameId == null) return; // user was not found, do nothing. // TODO: add error message
 
             // Create the conversation chat box
             FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
@@ -57,9 +60,11 @@ public class NewChatBoxController {
 
             // Add the chat to the users database
             int id = Database.addConversationToDatabase(mainViewControllerReference.MyUser.getId() ,tempNameId);
-            if (id != -1)
-                chatBoxPane.setId(Database.compareStrings(mainViewControllerReference.MyUser.getId(), tempNameId) + "_" + id);
-            else {
+            if (id != -1) {
+                String conversationName = Database.compareStrings(mainViewControllerReference.MyUser.getId(), tempNameId) + "_" + id;
+                chatBoxPane.setId(conversationName);
+                mainViewControllerReference.userChats.put(chatBoxPane, new RegularChat(new ArrayList<Message>(),conversationName.split("_")[0], conversationName.split("_")[1],id));
+            } else {
                 tempSize = mainViewControllerReference.getHistoryVBox().getChildren().size();
                 mainViewControllerReference.getHistoryVBox().getChildren().remove(tempSize-1);
                 mainViewControllerReference.showAlertWithMessage(Alert.AlertType.ERROR,"Error","Could not create the conversation.");

@@ -232,7 +232,10 @@ public class MainViewController {
             userImageName = selectedUserImage.getId().split("_")[0]; // the id is "male_AvatarImageS"
 
         // Check that username is unique
-        if (!Database.isUsernameUnique(username)) return;
+        if (!Database.isUsernameUnique(username)) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Username Taken", "That username is already taken, try a different one.");
+            return;
+        }
 
         // Generate a unique user id
         String userId = IdGenerator.generateUniqueUserId();
@@ -269,7 +272,10 @@ public class MainViewController {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
     private boolean handleUserLogin(User user) {
-        if (user == null) return false;
+        if (user == null) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Error", "Could not load your user, please try again later.");
+            return false;
+        }
         else MyUser = user;
 
         // Initialize the client web socket
@@ -394,6 +400,8 @@ public class MainViewController {
         }
 
         // Show the USER tab and show users chats
+        cleanChatBubbles();
+        setConnectedLabelEmpty();
         showUserTab();
         addUsersChatsToScreen();
 
@@ -465,10 +473,11 @@ public class MainViewController {
                 Pane chatBoxPane = fxmlLoader.load();
                 chatBoxPane.setId(Database.compareStrings(regularChat.getSender(), regularChat.getReceiver()) + "_" + regularChat.getConversation_id());
                 chatBoxPane.setCursor(Cursor.HAND);
-                ChatBoxController controller = fxmlLoader.getController();
 
+                ChatBoxController controller = fxmlLoader.getController();
                 controller.setMainViewControllerReference(this);
                 controller.setNameLabel(Database.getUsernameById(regularChat.getReceiver()));
+
                 getHistoryVBox().getChildren().add(chatBoxPane);
 
                 this.userChats.put(chatBoxPane, regularChat); // adding the pane - chat reference to the hashmap for later use
@@ -527,6 +536,8 @@ public class MainViewController {
 
     public void setConnectedLabelOn() { connectedLabel.setText("connected"); }
     public void setConnectedLabelOff() { connectedLabel.setText("disconnected"); }
+    public void setConnectedLabelEmpty() { connectedLabel.setText(""); }
+
     public String getConnectedLabel() { return connectedLabel.getText(); }
 
     public Scene getCurrentScene() { return profileButton.getScene();}
