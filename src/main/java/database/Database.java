@@ -1,6 +1,6 @@
 package database;
 
-import util.Chat;
+import util.RegularChat;
 import util.Message;
 import util.User;
 import at.favre.lib.crypto.bcrypt.BCrypt;
@@ -41,9 +41,9 @@ public class Database {
 
 
 
-    public static ArrayList<Chat> getUsersChatsFromDatabase(String userId) {
+    public static ArrayList<RegularChat> getUsersChatsFromDatabase(String userId) {
         String queryForConversations = "SELECT * FROM conversations WHERE participant1 = ? OR participant2 = ?";
-        ArrayList<Chat> usersChats = new ArrayList<Chat>();
+        ArrayList<RegularChat> usersRegularChats = new ArrayList<RegularChat>();
 
         try (Connection con = DatabaseConfig.getConnection();
              PreparedStatement pst1 = con.prepareStatement(queryForConversations)) {
@@ -55,14 +55,14 @@ public class Database {
 
             while (rs.next()) {
                 if (Objects.equals(rs.getString("participant1"), userId))
-                    usersChats.add(new Chat(
+                    usersRegularChats.add(new RegularChat(
                             null,
                             userId,
                             rs.getString("participant2"),
                             rs.getInt("conversation_id"))
                     );
                 else
-                    usersChats.add(new Chat(
+                    usersRegularChats.add(new RegularChat(
                             null,
                             userId,
                             rs.getString("participant1"),
@@ -74,7 +74,7 @@ public class Database {
             catchBlockCode(e);
         }
 
-        return usersChats;
+        return usersRegularChats;
     }
 
     public static ArrayList<Message> getChatMessagesFromDatabase(String tableName) {

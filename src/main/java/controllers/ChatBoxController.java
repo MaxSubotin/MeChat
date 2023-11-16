@@ -1,7 +1,6 @@
 package controllers;
 
 import database.Database;
-import util.Chat;
 import util.Message;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -41,13 +40,13 @@ public class ChatBoxController {
         mainViewControllerReference.setSelectedChatBoxPane(newChatBox);
 
         // Getting the Chat object based on the selected Pane
-        mainViewControllerReference.currentChat = mainViewControllerReference.userChats.get(newChatBox);
+        mainViewControllerReference.currentRegularChat = mainViewControllerReference.userChats.get(newChatBox);
 
         // Set receiver name label
-        mainViewControllerReference.setSelectedChatBoxUserId(mainViewControllerReference.currentChat.getReceiver());
+        mainViewControllerReference.setSelectedChatBoxUserId(mainViewControllerReference.currentRegularChat.getReceiver());
 
         // Check if the other person is connected or disconnected
-        if (Database.isUserConnected(mainViewControllerReference.currentChat.getReceiver()))
+        if (Database.isUserConnected(mainViewControllerReference.currentRegularChat.getReceiver()))
             mainViewControllerReference.setConnectedLabelOn();
         else
             mainViewControllerReference.setConnectedLabelOff();
@@ -68,7 +67,7 @@ public class ChatBoxController {
     public void addMessageBubbles() {
         // The id of the chat box pane on the left side is the same as the name of the table that the messages are stored in the database: sender_receiver_conversationId
         //ArrayList<Message> listOfMessages = Database.getChatMessagesFromDatabase(mainViewControllerReference.getSelectedChatBoxPane().getId());
-        ArrayList<Message> listOfMessages = mainViewControllerReference.currentChat.getMessages();
+        ArrayList<Message> listOfMessages = mainViewControllerReference.currentRegularChat.getMessages();
 
         try {
             // For each message in the chat we make a new bubble and add the text into it

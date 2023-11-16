@@ -20,8 +20,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
@@ -36,11 +34,11 @@ public class MainViewController {
     // - - - - - - - - - - Variable Declaration  - - - - - - - - - - //
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
-    public HashMap<Pane, Chat> userChats = new HashMap<>();
+    public HashMap<Pane, RegularChat> userChats = new HashMap<>();
 
 
     public User MyUser = null;
-    public Chat currentChat = null;
+    public RegularChat currentRegularChat = null;
     private Pane selectedChatBoxPane;
     private HBox selectedAvatarHbox;
     private ImageView selectedUserImage = null;
@@ -106,7 +104,10 @@ public class MainViewController {
         String text = messageTextField.getText();
         if (text == null || text.isEmpty()) return;
 
-        currentChat.sendMessage(webSocketClient, text);
+        if (!currentRegularChat.sendMessage(webSocketClient, text)) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not send the message","There was a problem sending the message, please try again later.");
+            return;
+        }
 
         messageTextField.clear(); // Removing the text from the textfield
         getFocus();
@@ -468,21 +469,21 @@ public class MainViewController {
         historyVBox.getChildren().clear(); // clean the chats of the left if there are any
 
         // maybe do this operation in a separate thread in case a user has a lot of chats...
-        ArrayList<Chat> usersChats = Database.getUsersChatsFromDatabase(MyUser.getId());
-        for (Chat chat: usersChats) {
+        ArrayList<RegularChat> usersRegularChats = Database.getUsersChatsFromDatabase(MyUser.getId());
+        for (RegularChat regularChat : usersRegularChats) {
             try {
                 FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
                 Pane chatBoxPane = fxmlLoader.load();
-                chatBoxPane.setId(Database.compareStrings(chat.getSender(), chat.getReceiver()) + "_" + chat.getConversation_id());
+                chatBoxPane.setId(Database.compareStrings(regularChat.getSender(), regularChat.getReceiver()) + "_" + regularChat.getConversation_id());
                 chatBoxPane.setCursor(Cursor.HAND);
                 ChatBoxController controller = fxmlLoader.getController();
 
                 controller.setMainViewControllerReference(this);
-                controller.setNameLabel(Database.getUsernameById(chat.getReceiver()));
+                controller.setNameLabel(Database.getUsernameById(regularChat.getReceiver()));
                 getHistoryVBox().getChildren().add(chatBoxPane);
 
-                this.userChats.put(chatBoxPane, chat); // adding the pane - chat reference to the hashmap for later use
-                chat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
+                this.userChats.put(chatBoxPane, regularChat); // adding the pane - chat reference to the hashmap for later use
+                regularChat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
