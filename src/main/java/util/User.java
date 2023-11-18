@@ -3,12 +3,15 @@ package util;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import database.Database;
 import javafx.scene.control.Alert;
+import javafx.scene.layout.Pane;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class User {
     private String name, id, userImage;
+    public HashMap<Pane, RegularChat> userChats = new HashMap<>();
 
     public User(String _name, String _id, String _userImage) {
         this.name = _name;
@@ -27,11 +30,14 @@ public class User {
         // Check newUsername in database and update the database
         if (Database.isUsernameUnique(newUsername)) {
             try {
-                Database.updateUsernameInDatabase(newUsername, getName());
+                if (!Database.updateUsernameInDatabase(newUsername, getName())) {
+                    System.out.println("Could not update the username.");
+                    return false;
+                }
             }
             catch (Exception e) { return false; }
 
-            setName(newUsername);
+            this.name = newUsername;
             return true;
         }
         else return false;
@@ -58,9 +64,17 @@ public class User {
 
     }
 
-    public void updatePassword(String hashedPassword) {
+    public HashMap<Pane, RegularChat> getUserChats() { return userChats; }
+
+    public void addChatToUser(Pane pane, RegularChat chat) {
+        getUserChats().put(pane, chat);
+    }
+
+    public boolean updatePassword(String hashedPassword) {
 
         // Update the database
-        Database.updatePasswordInDatabase(hashedPassword, getName());
+        if (!Database.updatePasswordInDatabase(hashedPassword, getName()))
+            return false;
+        return true;
     }
 }

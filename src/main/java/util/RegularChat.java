@@ -38,14 +38,17 @@ public class RegularChat implements ChatMethods {
         try {
             // Adding the new message to the array and the database
             messages.add(message);
-            Database.addMessageToDatabase(message, getConversation_id());
+            if (Database.addMessageToDatabase(message, getConversation_id())) {
 
-            // Turn Message object into json format
-            String jsonMessage = sender.gson.toJson(message);
+                // Turn Message object into json format
+                String jsonMessage = sender.gson.toJson(message);
 
-            // Send the message in json format to the chat server where it will be sent to the correct user
-            sender.send(jsonMessage);
-        } catch (Exception e) {
+                // Send the message in json format to the chat server where it will be sent to the correct user
+                sender.send(jsonMessage);
+            }
+            else return false;
+        }
+        catch (Exception e) {
             return false;
         }
 

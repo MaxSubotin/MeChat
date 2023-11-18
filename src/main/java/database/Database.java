@@ -1,5 +1,7 @@
 package database;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import util.RegularChat;
 import util.Message;
 import util.User;
@@ -33,7 +35,8 @@ public class Database {
             }
         }
         catch (SQLException e) {
-            catchBlockCode(e);
+            showAlertWithMessage(Alert.AlertType.ERROR, "User Not Found", "User not found, please try again later.\nERROR #1");
+            catchBlockCode(e); // User not found error is handled in the MainViewController file
         }
 
         return userFromDatabase;
@@ -72,6 +75,8 @@ public class Database {
 
         } catch (SQLException e) {
             catchBlockCode(e);
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not load user chats", "Could not load the user chats for user: " + userId + "\nERROR #2");
+            usersRegularChats = null;
         }
 
         return usersRegularChats;
@@ -93,6 +98,8 @@ public class Database {
 
         } catch (SQLException e) {
             catchBlockCode(e);
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not load table", "Could not load the table, table name: " + tableName + "\nERROR #3");
+            chatMessages = null; // will this be a problem?
         }
 
         return chatMessages;
@@ -114,6 +121,7 @@ public class Database {
             }
         }
         catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not find user", "Error finding the user by session id, try again later.\nERROR #4");
             catchBlockCode(e);
         }
 
@@ -136,6 +144,7 @@ public class Database {
             }
         }
         catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not find session id", "Error finding the session id by user, try again later.\nERROR #5");
             catchBlockCode(e);
         }
 
@@ -158,6 +167,7 @@ public class Database {
             }
         }
         catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not user id", "Error finding the user id by username, try again later.\nERROR #6");
             catchBlockCode(e);
         }
 
@@ -180,6 +190,7 @@ public class Database {
             }
         }
         catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not username", "Error finding the username by user id, try again later.\nERROR #7");
             catchBlockCode(e);
         }
 
@@ -188,7 +199,7 @@ public class Database {
 
     // ------------------------------------------------------------------ //
 
-    public static void addUserToDatabase(String userUsername, String userPassword, String userId, String userImageName) {
+    public static boolean addUserToDatabase(String userUsername, String userPassword, String userId, String userImageName) {
         String insertQueryUsers = "INSERT INTO users(username, password, id, image) VALUES(?, ?, ?, ?)";
 
         try (Connection con = DatabaseConfig.getConnection();
@@ -201,11 +212,14 @@ public class Database {
             insertPstUsers.executeUpdate();
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not add user to database", "Error adding the user to the database, try again later.\nERROR #8");
             catchBlockCode(e);
+            return false;
         }
+        return true;
     }
 
-    public static void addSessionToDataBase(String userId, String session) {
+    public static boolean addSessionToDataBase(String userId, String session) {
         String insertQuery = "INSERT INTO session_tokens (session_token, id) VALUES (?, ?)";
 
         try (Connection con = DatabaseConfig.getConnection();
@@ -216,8 +230,11 @@ public class Database {
             insertPstUsers.executeUpdate();
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not add session to the database", "Error adding the user session to the database, try again later.\nERROR #8");
             catchBlockCode(e);
+            return false;
         }
+        return true;
     }
 
     public static int addConversationToDatabase(String sender, String receiver) {
@@ -247,8 +264,15 @@ public class Database {
                     returnConvId = rs.getInt("conversation_id");
 
                     String tableNameFromDatabase = checkIfTableExists(con, correctTableName[0] + "_" + correctTableName[1]);
-                    if (tableNameFromDatabase == null)
-                        createConversationMessagesTable(con, correctTableName[0] + "_" + correctTableName[1] + "_" + returnConvId);
+                    if (tableNameFromDatabase == null) {
+                        if (!createConversationMessagesTable(con, correctTableName[0] + "_" + correctTableName[1] + "_" + returnConvId)) {
+                            PreparedStatement pst3 = con.prepareStatement("DELETE FROM conversations WHERE participant1 = ? AND participant2 = ?");
+                            pst3.setString(1, correctTableName[0]);
+                            pst3.setString(2, correctTableName[1]);
+                            pst3.executeUpdate();
+                            return -1; // if there was an error in creating the conversation in the database
+                        }
+                    }
                     else
                         return Integer.parseInt(tableNameFromDatabase.split("_")[2]);
 
@@ -266,13 +290,14 @@ public class Database {
             }
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not add conversation to the database", "Error adding the conversation to the database, try again later.\nERROR #9");
             catchBlockCode(e);
         }
 
         return returnConvId;
     }
 
-    public static void addMessageToDatabase(Message message, int conversation_id) {
+    public static boolean addMessageToDatabase(Message message, int conversation_id) {
         String tableName = compareStrings(message.getSender(), message.getReceiver());
         String insertQuery = "INSERT INTO " + tableName + "_" + conversation_id + " (sender_id, receiver_id, timestamp, message_text) VALUES (?, ?, ?, ?)";
 
@@ -289,8 +314,11 @@ public class Database {
             pst1.executeUpdate();
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not add message to the database", "Error adding the message to the database, try again later.\nERROR #10");
             catchBlockCode(e);
+            return false;
         }
+        return true;
     }
 
     public static String checkIfConversationExists(Connection con, String sender, String receiver) {
@@ -308,6 +336,7 @@ public class Database {
             }
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not search for the conversation", "Error in searching for the conversation in the database, try again later.\nERROR #11");
             catchBlockCode(e);
         }
 
@@ -329,21 +358,24 @@ public class Database {
             }
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not search for the table in database", "Error in searching for the table in the database, try again later.\nERROR #12");
             catchBlockCode(e);
         }
         return null;
     }
 
-    public static void createConversationMessagesTable(Connection con, String tableName) {
+    public static boolean createConversationMessagesTable(Connection con, String tableName) {
         String query = "CREATE TABLE IF NOT EXISTS " + tableName + " (message_id SERIAL PRIMARY KEY, sender_id VARCHAR(255) NOT NULL, receiver_id VARCHAR(255) NOT NULL, timestamp TIMESTAMP NOT NULL, message_text TEXT NOT NULL)";
 
         try (Statement stmt = con.createStatement()) {
-
             stmt.executeUpdate(query);
             System.out.println("A new table was created: " + tableName);
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not create conversation table", "Error in creating a coversation table in the database, try again later.\nERROR #13");
             catchBlockCode(e);
+            return false;
         }
+        return true;
     }
 
     public static boolean isUsernameUnique(String userUsername) {
@@ -365,6 +397,7 @@ public class Database {
             }
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could check username uniqueness", "Error in checking for username uniqueness, try again later.\nERROR #14");
             catchBlockCode(e);
         }
 
@@ -387,13 +420,14 @@ public class Database {
             }
         }
         catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could check if user connected", "Error in checking if the user is connected to the database, try again later.\nERROR #15");
             catchBlockCode(e);
         }
 
         return connected;
     }
 
-    public static void removeUserSession(String userId) {
+    public static boolean removeUserSession(String userId) {
         String removeQuery = "DELETE FROM session_tokens WHERE id = ?";
 
         try (Connection con = DatabaseConfig.getConnection();
@@ -403,12 +437,14 @@ public class Database {
             pst.executeUpdate();
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not remove user", "Error in removing a user from the database, try again later.\nERROR #16");
             catchBlockCode(e);
+            return false;
         }
-
+        return true;
     }
 
-    public static void deleteUser(String userId) {
+    public static boolean deleteUser(String userId) {
         String deleteQueryUsers = "DELETE FROM users WHERE id = ?";
         String deleteQuerySession = "DELETE FROM session_tokens WHERE id = ?";
         String deleteQueryConversations = "DELETE FROM conversations WHERE participant1 = ? OR participant2 = ?";
@@ -437,9 +473,11 @@ public class Database {
             pst3.executeUpdate();
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not delete user", "Error in deleting a user from the database, try again later.\nERROR #17");
             catchBlockCode(e);
+            return false;
         }
-
+        return true;
     }
 
     private static ArrayList<String> findAllChats(Connection con, String userId) {
@@ -458,13 +496,14 @@ public class Database {
             }
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not search for chats", "Error in searching for user chats in the database, try again later.\nERROR #18");
             catchBlockCode(e);
         }
 
         return list;
     }
 
-    public static void cleanUserSessionTabel() {
+    public static boolean cleanUserSessionTabel() {
         String removeQuery = "DELETE FROM session_tokens";
 
         try (Connection con = DatabaseConfig.getConnection();
@@ -473,8 +512,11 @@ public class Database {
             pst.executeUpdate();
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not clean sessions table", "Error in cleaning the sessions table in the database.\nERROR #19");
             catchBlockCode(e);
+            return false;
         }
+        return true;
     }
 
     public static boolean isUserIdUnique(String userId) {
@@ -490,12 +532,15 @@ public class Database {
             if (rs.next()) {
                 int count = rs.getInt("count");
                 if (count > 0) {
+                    System.out.println("the username is not unique");
                     userIdUnique = false;
                 }
             }
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not assert uniqueness", "Error in checking for uniqueness of user id the database, try again later.\nERROR #20");
             catchBlockCode(e);
+            return false;
         }
 
         return userIdUnique;
@@ -504,7 +549,7 @@ public class Database {
 
     // ------------------------------------------------------------------ //
 
-    public static void updateUsernameInDatabase(String newUsername, String oldUsername) {
+    public static boolean updateUsernameInDatabase(String newUsername, String oldUsername) {
         String updateQuery = "UPDATE users SET username = ? WHERE username = ?";
 
         try (Connection con = DatabaseConfig.getConnection();
@@ -515,11 +560,14 @@ public class Database {
             pst.executeUpdate();
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not update username", "Error in updating the username in the database, try again later.\nERROR #21");
             catchBlockCode(e);
+            return false;
         }
+        return true;
     }
 
-    public static void updatePasswordInDatabase(String newPassword, String username) {
+    public static boolean updatePasswordInDatabase(String newPassword, String username) {
         String updateQuery = "UPDATE users SET password = ? WHERE username = ?";
 
         try (Connection con = DatabaseConfig.getConnection();
@@ -530,11 +578,14 @@ public class Database {
             pst.executeUpdate();
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not update password", "Error in updating the password in the database, try again later.\nERROR #22");
             catchBlockCode(e);
+            return false;
         }
+        return true;
     }
 
-    public static void updateAvatarInDatabase(String newAvatar, String username) {
+    public static boolean updateAvatarInDatabase(String newAvatar, String username) {
         String updateQuery = "UPDATE users SET image = ? WHERE username = ?";
 
         try (Connection con = DatabaseConfig.getConnection();
@@ -545,8 +596,11 @@ public class Database {
             pst.executeUpdate();
 
         } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not update avatar", "Error in updating the avatar in the database, try again later.\nERROR #23");
             catchBlockCode(e);
+            return false;
         }
+        return true;
     }
 
 
@@ -563,6 +617,16 @@ public class Database {
     private static void catchBlockCode(SQLException e) {
         Logger lgr = Logger.getLogger(Database.class.getName());
         lgr.log(Level.SEVERE, e.getMessage(), e);
+    }
+
+    private static void showAlertWithMessage(Alert.AlertType type, String title, String errorMessage) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(type);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(errorMessage);
+            alert.showAndWait();
+        });
     }
 
 }

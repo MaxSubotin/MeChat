@@ -66,7 +66,7 @@ public class TemporaryChatBoxController {
             if (id != -1) {
                 String conversationName = Database.compareStrings(mainViewControllerReference.MyUser.getId(), tempNameId) + "_" + id;
                 chatBoxPane.setId(conversationName);
-                mainViewControllerReference.userChats.put(chatBoxPane, new RegularChat(new ArrayList<Message>(),conversationName.split("_")[0], conversationName.split("_")[1],id));
+                mainViewControllerReference.MyUser.addChatToUser(chatBoxPane, new RegularChat(new ArrayList<Message>(),conversationName.split("_")[0], conversationName.split("_")[1],id));
             } else {
                 tempSize = mainViewControllerReference.getHistoryVBox().getChildren().size();
                 mainViewControllerReference.getHistoryVBox().getChildren().remove(tempSize-1);

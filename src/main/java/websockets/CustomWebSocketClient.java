@@ -52,7 +52,10 @@ public class CustomWebSocketClient extends WebSocketClient {
             stage.close();
 
             String userId = Database.getUserIdByUsername(this.username);
-            Database.removeUserSession(userId);
+            if (userId != null) {
+                if (!Database.removeUserSession(userId))
+                    System.out.println("Could not complete the user session removal form the database. Error in onError Override function in CustomWebSocketClient.");
+            }
         });
     }
 

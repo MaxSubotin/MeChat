@@ -40,7 +40,7 @@ public class ChatBoxController {
         mainViewControllerReference.setSelectedChatBoxPane(newChatBox);
 
         // Getting the Chat object based on the selected Pane
-        mainViewControllerReference.currentRegularChat = mainViewControllerReference.userChats.get(newChatBox);
+        mainViewControllerReference.currentRegularChat = mainViewControllerReference.MyUser.getUserChats().get(newChatBox);
 
         // Set receiver name label
         mainViewControllerReference.setSelectedChatBoxUserId(mainViewControllerReference.currentRegularChat.getReceiver());

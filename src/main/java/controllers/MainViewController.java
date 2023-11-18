@@ -34,8 +34,6 @@ public class MainViewController {
     // - - - - - - - - - - Variable Declaration  - - - - - - - - - - //
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
-    public HashMap<Pane, RegularChat> userChats = new HashMap<>();
-
 
     public User MyUser = null;
     public RegularChat currentRegularChat = null;
@@ -153,7 +151,8 @@ public class MainViewController {
     public void settingsPasswordSaveButtonOnClick() {
         // Check new password with regex
         if (RegexChecker.isValidPassword(signupPasswordField.getText())) {
-            MyUser.updatePassword(BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray()));
+            if (!MyUser.updatePassword(BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray())))
+                return;
             signupPasswordField.clear();
         } else {
             // Show and error message
@@ -175,8 +174,11 @@ public class MainViewController {
     @FXML
     public void settingsDeleteAccountButtonOnClick() {
         if (MyUser != null) {
-            Database.deleteUser(MyUser.getId());
-            webSocketClient.sendMessageToServer(MyUser, "USERNAME//DELETED//" + MyUser.getName());
+            if (Database.deleteUser(MyUser.getId()))
+                webSocketClient.sendMessageToServer(MyUser, "USERNAME//DELETED//" + MyUser.getName());
+            else
+                System.out.println("Could not properly delete your user from the database, please try again later.");
+
             closeChatAppWindow();
         }
     }
@@ -198,25 +200,44 @@ public class MainViewController {
 
     @FXML
     public void loginButtonOnClick() {
-        // If Logged it clean the UI
-        closeConnectionIfOpen(); // close any open connections if there are any
-        chatVBox.getChildren().clear(); // clean the chats of the left if there are any
-        chatNameLabel.setText(" ");
-        connectedLabel.setText(" ");
+        // 1. Close any open connections (in case the user was already logged in to a different account)
+        closeConnectionIfOpen();
+        cleanChatBoxes();
+        cleanChatBubbles();
+        setConnectedLabelEmpty();
 
-        // Try to log the user into his account if it exists
-        if (handleUserLogin(Database.getUserFromDatabase(loginUsernameField.getText(), loginPasswordField.getText())))
+        // 2. Get user info
+        String usernameInput = loginUsernameField.getText(), passwordInput = loginPasswordField.getText();
+        if (usernameInput.isEmpty() || passwordInput.isEmpty()) {
+            showAlertWithMessage(Alert.AlertType.WARNING, "Missing Info", "Please enter a username and a password.");
+            return;
+        }
+
+        // 3. Fetch user data from the database
+        MyUser = Database.getUserFromDatabase(usernameInput,passwordInput);
+        if (MyUser == null) return;
+
+        ArrayList<RegularChat> userChats = Database.getUsersChatsFromDatabase(MyUser.getId());
+        if (userChats != null) {
+
+            // 4. Establish a new websocket connection
+            handleUserLogin();
+
+            // 5. Show user info on the gui
+            if (!addUsersChatsToScreen(userChats)) return;
+            showUserTab();
             cleanLoginForm();
+        }
     }
 
     @FXML
     public void signupButtonOnClick() {
-        // Getting the username and hashing the password
+        // 1. Getting the username, hashing the password and setting default user image name
         String username = signupUsernameField.getText();
         String HashedPassword = BCrypt.withDefaults().hashToString(12, signupPasswordField.getText().toCharArray());
         String userImageName = "male";
 
-        // Check that the username and password are in a correct format like length, special characters and the like
+        // 2. Check that the username and password are in a correct format like length, special characters and the like
         if (!(RegexChecker.isValidUsername(username) && RegexChecker.isValidPassword(signupPasswordField.getText()))) {
             // Show and error message
             showAlertWithMessage(Alert.AlertType.ERROR,"Error", "The username or password are incorrect.\nUsername: 1 lower case letter, 1 upper case letter, 1 number, no special character, up-to 12 characters long. \nPassword: 1 lower case letter, 1 upper case letter, 1 number, can have special character, up-to 12 characters long.");
@@ -237,18 +258,21 @@ public class MainViewController {
             return;
         }
 
-        // Generate a unique user id
-        String userId = IdGenerator.generateUniqueUserId();
-
-        // Add user to database and Login
+        // 3. Create a new user and add it to the database
+        String userId = IdGenerator.generateUniqueUserId(); // Generate a unique user id
         MyUser = new User(username, userId, userImageName);
-        Database.addUserToDatabase(username, HashedPassword, userId, userImageName); // saving the hashed version of the password
+        if (Database.addUserToDatabase(username, HashedPassword, userId, userImageName)) { // saving the hashed version of the password
 
-        selectedUserImage = null; // cleaning the selected image
-
-        // Log the user into his account
-        if (handleUserLogin(MyUser))
-            cleanSignupForm();
+            // 4. Log the user into his account and establish a new websocket connection
+            if (handleUserLogin()) {
+                showUserTab();
+                cleanSignupForm();
+                selectedUserImage = null; // cleaning the selected image
+            }
+        } else {
+            MyUser = null;
+            selectedUserImage = null;
+        }
     }
 
     @FXML
@@ -271,15 +295,8 @@ public class MainViewController {
     // - - - - - - - - - - - User Login Logic  - - - - - - - - - - - //
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
-    private boolean handleUserLogin(User user) {
-        if (user == null) {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Error", "Could not load your user, please try again later.");
-            return false;
-        }
-        else MyUser = user;
-
-        // Initialize the client web socket
-        try {
+    private boolean handleUserLogin() {
+        try { // Initialize the client web socket
             String session = UUID.randomUUID().toString(); // Generate a unique session or token
             webSocketClient = new CustomWebSocketClient(new URI("ws://localhost:8888/socket?session=" + session), MyUser.getName(), getCurrentScene()) {
 
@@ -300,43 +317,61 @@ public class MainViewController {
                                     Platform.runLater(() -> {
                                         setConnectedLabelOn();
                                     });
-                            } else if (text.contains("USERNAME//CHANGED//")) {
+                            } else if (text.contains("USERNAME//CHANGED//")) { //!@#
                                 Platform.runLater(() -> {
-                                    if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) { chatNameLabel.setText(receivedMessage.getText().split("//")[2]); }
-                                    addUsersChatsToScreen();
+                                    // Holding on to the old name and changing the title to the new name
+                                    String newName = receivedMessage.getText().split("//")[2];
+
+                                    if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) {
+                                        // The person we are chatting with has changed their name, update the chat name label and the selected chat box name
+                                        chatNameLabel.setText(newName);
+                                        ((Label) (selectedChatBoxPane.getChildren()).get(0)).setText(newName);
+
+                                    } else {
+                                        // Find the correct chat box pane (on the right side) and rename the name label on it
+                                        String chatId = Database.compareStrings(receivedMessage.getSender(), MyUser.getId());
+                                        System.out.println("Looking for: " + chatId);
+                                        for (Pane chatPane : MyUser.userChats.keySet()) {
+                                            System.out.println("#: " + chatPane.getId());
+                                            if (chatPane.getId().contains(chatId))
+                                                ((Label) (chatPane.getChildren()).get(0)).setText(newName);
+                                        }
+                                    }
                                 });
                             } else if (text.contains("NEW//CHAT//CREATED//")) { // This case is not yet implemented
                                 Platform.runLater(() -> {
                                     String currentChat = selectedChatBoxPane.getId();
-                                    addUsersChatsToScreen();
-                                    for (Node child: historyVBox.getChildren()) {
-                                        if (Objects.equals(child.getId(), currentChat)) {
-                                            System.out.println("Inside the if statement");
-                                            selectedChatBoxPane = (Pane) child;
-                                            selectedChatBoxPane.setStyle("-fx-border-color: skyblue; -fx-border-radius: 15px; -fx-border-width: 0.5px");
-                                        }
-                                    }
-                                });
-                            } else if (text.contains("USERNAME//DELETED//")) {
-                                Platform.runLater(() -> {
-                                    String currentChat = selectedChatBoxPane.getId();
-                                    if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) {
-                                        cleanChatBubbles();
-                                        currentChat = null;
-                                    }
-                                    addUsersChatsToScreen(); // This resets the selectedChatBoxPane
-                                    if (currentChat != null) {
-                                        for (Node child: historyVBox.getChildren()) {
+                                    if (addUsersChatsToScreen(Database.getUsersChatsFromDatabase(MyUser.getId()))) { // look at this part, its strange, note sure about it.
+                                        for (Node child : historyVBox.getChildren()) {
                                             if (Objects.equals(child.getId(), currentChat)) {
                                                 System.out.println("Inside the if statement");
                                                 selectedChatBoxPane = (Pane) child;
                                                 selectedChatBoxPane.setStyle("-fx-border-color: skyblue; -fx-border-radius: 15px; -fx-border-width: 0.5px");
                                             }
                                         }
-                                    } else {
-                                        selectedChatBoxUserId = null;
-                                        selectedChatBoxPane = null;
-                                        connectedLabel.setText("");// this does not seem to take effect
+                                    }
+                                });
+                            } else if (text.contains("USERNAME//DELETED//")) { //!@#
+                                Platform.runLater(() -> {
+                                    String currentChat = selectedChatBoxPane.getId();
+                                    if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) {
+                                        cleanChatBubbles();
+                                        currentChat = null;
+                                    }
+                                    if (addUsersChatsToScreen(Database.getUsersChatsFromDatabase(MyUser.getId()))) { // This resets the selectedChatBoxPane
+                                        if (currentChat != null) {
+                                            for (Node child : historyVBox.getChildren()) {
+                                                if (Objects.equals(child.getId(), currentChat)) {
+                                                    System.out.println("Inside the if statement");
+                                                    selectedChatBoxPane = (Pane) child;
+                                                    selectedChatBoxPane.setStyle("-fx-border-color: skyblue; -fx-border-radius: 15px; -fx-border-width: 0.5px");
+                                                }
+                                            }
+                                        } else {
+                                            selectedChatBoxUserId = null;
+                                            selectedChatBoxPane = null;
+                                            connectedLabel.setText("");// this does not seem to take effect
+                                        }
                                     }
                                 });
                             }
@@ -368,6 +403,10 @@ public class MainViewController {
                                     // Add message bubble to the screen
                                     chatVBox.getChildren().add(chatBubble);
 
+                                    // adding the new message to the list of messages for this user
+                                    if (!Objects.equals(MyUser.getId(),receivedMessage.getSender()))
+                                        MyUser.getUserChats().get(selectedChatBoxPane).getMessages().add(receivedMessage);
+
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
@@ -389,21 +428,20 @@ public class MainViewController {
             };
 
             if (Database.getSessionByUserId(MyUser.getId()) == null) {
-                Database.addSessionToDataBase(MyUser.getId(), session); // adding the connecting to the database to keep track of connected users
-                webSocketClient.connect();
-            } else
+                if (Database.addSessionToDataBase(MyUser.getId(), session)) // adding the connecting to the database to keep track of connected users
+                    webSocketClient.connect();
+                else {
+                    webSocketClient.close();
+                    return false;
+                }
+            }
+            else
                 webSocketClient.onError(new Exception());
 
         } catch (URISyntaxException ex) {
             showAlertWithMessage(Alert.AlertType.ERROR, "Error", "URISyntaxException, Not a valid WebSocket URI\n" + ex);
             return false;
         }
-
-        // Show the USER tab and show users chats
-        cleanChatBubbles();
-        setConnectedLabelEmpty();
-        showUserTab();
-        addUsersChatsToScreen();
 
         return true;
     }
@@ -414,7 +452,8 @@ public class MainViewController {
         Stage stage = (Stage) getCurrentScene().getWindow();
         stage.close();
         if (MyUser != null)
-            Database.removeUserSession(MyUser.getId());
+            if (!Database.removeUserSession(MyUser.getId()))
+                System.out.println("Could not complete the user session removal form the database. Error in closeChatAppWindow function in MainViewController.");
 
         System.exit(0);
     }
@@ -439,10 +478,14 @@ public class MainViewController {
         profileButton.requestFocus();
     }
 
+    public void cleanChatBoxes() {
+        historyVBox.getChildren().clear();
+    }
+
     public void cleanChatBubbles() {
-        this.chatVBox.getChildren().clear();
-        this.setChatNameLabel("");
-        this.setConnectedLabelOff();
+        chatVBox.getChildren().clear();
+        setChatNameLabel("");
+        setConnectedLabelOff();
     }
 
     public void openLoginTab() {
@@ -458,15 +501,16 @@ public class MainViewController {
             userPictureImageView.setImage(new Image(getClass().getResource("/images/" + MyUser.getUserImage()).toExternalForm()));
         } catch (NullPointerException e) {
             userPictureImageView.setImage(new Image("/images/male.png"));
+            showAlertWithMessage(Alert.AlertType.ERROR, "User Image Error", "There was an error when loading your user image.");
             e.printStackTrace();
         }
     }
 
-    private void addUsersChatsToScreen() {
-        historyVBox.getChildren().clear(); // clean the chats of the left if there are any
+    private boolean addUsersChatsToScreen(ArrayList<RegularChat> usersRegularChats) {
+        if (usersRegularChats == null) return false;
 
-        // maybe do this operation in a separate thread in case a user has a lot of chats...
-        ArrayList<RegularChat> usersRegularChats = Database.getUsersChatsFromDatabase(MyUser.getId());
+        cleanChatBoxes(); // clean the chats of the left if there are any
+
         for (RegularChat regularChat : usersRegularChats) {
             try {
                 FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
@@ -479,13 +523,15 @@ public class MainViewController {
                 controller.setNameLabel(Database.getUsernameById(regularChat.getReceiver()));
 
                 getHistoryVBox().getChildren().add(chatBoxPane);
-
-                this.userChats.put(chatBoxPane, regularChat); // adding the pane - chat reference to the hashmap for later use
                 regularChat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
+                MyUser.addChatToUser(chatBoxPane,regularChat); // adding the pane - chat reference to the hashmap for later use
+
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                showAlertWithMessage(Alert.AlertType.ERROR,"Error Loading Messages", "Could not load some messages from " + regularChat.getReceiver() + ". Please try again later.");
+                return false;
             }
         }
+        return true;
     }
 
     private void cleanSignupForm() {

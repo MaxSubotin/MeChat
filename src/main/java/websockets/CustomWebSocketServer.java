@@ -111,7 +111,9 @@ public class CustomWebSocketServer extends WebSocketServer {
       reverseLookupMap.remove(userId);
 
       // Remove the user from the connected users table in the database
-      Database.removeUserSession(userId);
+      if (!Database.removeUserSession(userId))
+        System.out.println("Could not complete the user session removal form the database. Error in onClose Override function in CustomWebSocketServer.");
+
       System.out.println(userId + " has left the room!");
     }
   }
@@ -192,7 +194,8 @@ public class CustomWebSocketServer extends WebSocketServer {
         break;
       }
     }
-    Database.cleanUserSessionTabel();
+    if (!Database.cleanUserSessionTabel())
+      System.out.println("Could not properly clean user session table.");
   }
 
 
