@@ -522,9 +522,11 @@ public class MainViewController {
                 controller.setMainViewControllerReference(this);
                 controller.setNameLabel(Database.getUsernameById(regularChat.getReceiver()));
 
-                getHistoryVBox().getChildren().add(chatBoxPane);
                 regularChat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
-                MyUser.addChatToUser(chatBoxPane,regularChat); // adding the pane - chat reference to the hashmap for later use
+                if (!Objects.equals(regularChat.getMessages().get(0).getSender(), "ERROR")) { // based on the implementation of the catch block of "Database.getChatMessagesFromDatabase"
+                    getHistoryVBox().getChildren().add(chatBoxPane);
+                    MyUser.addChatToUser(chatBoxPane, regularChat); // adding the pane - chat reference to the hashmap for later use
+                }
 
             } catch (IOException e) {
                 showAlertWithMessage(Alert.AlertType.ERROR,"Error Loading Messages", "Could not load some messages from " + regularChat.getReceiver() + ". Please try again later.");

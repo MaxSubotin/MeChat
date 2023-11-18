@@ -99,7 +99,7 @@ public class Database {
         } catch (SQLException e) {
             catchBlockCode(e);
             showAlertWithMessage(Alert.AlertType.ERROR, "Could not load table", "Could not load the table, table name: " + tableName + "\nERROR #3");
-            chatMessages = null; // will this be a problem?
+            chatMessages.add(0,new Message("ERROR","ERROR","ERROR","ERROR","ERROR"));
         }
 
         return chatMessages;
