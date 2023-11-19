@@ -317,7 +317,7 @@ public class MainViewController {
                                     Platform.runLater(() -> {
                                         setConnectedLabelOn();
                                     });
-                            } else if (text.contains("USERNAME//CHANGED//")) { //!@#
+                            } else if (text.contains("USERNAME//CHANGED//")) {
                                 Platform.runLater(() -> {
                                     // Holding on to the old name and changing the title to the new name
                                     String newName = receivedMessage.getText().split("//")[2];
@@ -351,7 +351,7 @@ public class MainViewController {
                                         }
                                     }
                                 });
-                            } else if (text.contains("USERNAME//DELETED//")) { //!@#
+                            } else if (text.contains("USERNAME//DELETED//")) {
                                 Platform.runLater(() -> {
                                     // Find and save the chat we need to delete from the current user
                                     Pane chatToDelete = null;
