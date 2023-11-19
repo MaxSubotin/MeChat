@@ -353,24 +353,24 @@ public class MainViewController {
                                 });
                             } else if (text.contains("USERNAME//DELETED//")) { //!@#
                                 Platform.runLater(() -> {
-                                    String currentChat = selectedChatBoxPane.getId();
-                                    if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) {
-                                        cleanChatBubbles();
-                                        currentChat = null;
+                                    // Find and save the chat we need to delete from the current user
+                                    Pane chatToDelete = null;
+                                    for (Pane chatPane : MyUser.userChats.keySet()) {
+                                        if (chatPane.getId().contains(receivedMessage.getSender()))
+                                            chatToDelete = chatPane;
                                     }
-                                    if (addUsersChatsToScreen(Database.getUsersChatsFromDatabase(MyUser.getId()))) { // This resets the selectedChatBoxPane
-                                        if (currentChat != null) {
-                                            for (Node child : historyVBox.getChildren()) {
-                                                if (Objects.equals(child.getId(), currentChat)) {
-                                                    System.out.println("Inside the if statement");
-                                                    selectedChatBoxPane = (Pane) child;
-                                                    selectedChatBoxPane.setStyle("-fx-border-color: skyblue; -fx-border-radius: 15px; -fx-border-width: 0.5px");
-                                                }
-                                            }
-                                        } else {
+
+                                    // Delete the chat if found
+                                    if (chatToDelete != null) {
+                                        historyVBox.getChildren().remove(chatToDelete);
+                                        MyUser.userChats.remove(chatToDelete);
+
+                                        // delete the message bubbles if the deleted chat is open
+                                        if (Objects.equals(selectedChatBoxUserId, receivedMessage.getSender())) {
+                                            cleanChatBubbles();
+                                            connectedLabel.setText("");
                                             selectedChatBoxUserId = null;
                                             selectedChatBoxPane = null;
-                                            connectedLabel.setText("");// this does not seem to take effect
                                         }
                                     }
                                 });
