@@ -20,3 +20,87 @@
     -fx-max-height: 5px; /* Adjust the height to make the thumb slim */
     -fx-padding: 0px; /* Reset the padding for the thumb */
 }
+
+/*
+    light-green:  #93B1A6;
+    medium-green:  #5C8374;
+    dark-green:  #183D3D;
+*/
+
+/* Remove the default blue border for tabs, text fields, and buttons */
+.tab, .text-field, .button {
+    -fx-focus-color: transparent;
+}
+
+
+.roundLook {
+    -fx-border-radius: 30px;
+    -fx-background-radius: 30px;
+    -fx-border-color: #606C5D;
+    -fx-border-width: 1px;
+}
+
+.bounce {}
+
+.bounce:hover {
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+    -fx-scale-z: 1.05;
+}
+
+.bounce:pressed {
+    -fx-scale-x: 0.95;
+    -fx-scale-y: 0.95;
+    -fx-scale-z: 0.95;
+}
+
+
+.tab {
+    -fx-background-color: #93B1A6;
+    -fx-background-insets: 0 7 -2 0;
+    -fx-border-insets: 1 8 -2 1;
+    -fx-border-color: #5C8374;
+    -fx-border-radius: 8 8 0 0;
+    -fx-background-radius: 10 10 0 0;
+    -fx-border-width: 2px;
+}
+
+.tab  .tab-label {
+    -fx-text-fill: black;
+}
+
+/* - - - - - - - - - - - - - - - - - - */
+
+.tab:selected {
+    -fx-background-color: #183D3D;
+}
+
+.tab:selected .tab-label {
+    -fx-text-fill: whitesmoke;
+}
+
+
+
+.button {
+    -fx-background-color: #5C8374;
+    -fx-border-color: #183D3D;
+    -fx-border-insets: 1 1 0 1;
+    -fx-border-width: 2px;
+    -fx-padding: 6px;
+    -fx-text-fill: whitesmoke;
+}
+
+
+.text-field {
+    -fx-background-color: whitesmoke;
+    -fx-border-color: #5C8374;
+    -fx-border-width: 2px;
+    -fx-border-insets: 1 1 1 1;
+
+}
+
+/* Customize the tab area background */
+.tab-pane .tab-header-background {
+    -fx-background-color: #404243; /* Set your desired color here */
+}
+

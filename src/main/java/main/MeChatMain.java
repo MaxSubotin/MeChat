@@ -1,5 +1,6 @@
 package main;
 
+import controllers.LoginSignupViewController;
 import controllers.MainViewController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -14,23 +15,20 @@ public class MeChatMain extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/mainView.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 900, 602, Color.web("rgba(0, 0, 0, 0.75)"));
 
-        MainViewController mainViewController = fxmlLoader.getController();
-        mainViewController.getFocus();
-        mainViewController.turnChatInvisible();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/loginSignupView.fxml"));
+        Scene scene = new Scene(fxmlLoader.load(), 900, 600, Color.web("rgba(0, 0, 0, 0.75)"));
+        LoginSignupViewController controller = fxmlLoader.getController();
+
+        stage.setOnCloseRequest((WindowEvent event) -> {
+            controller.closeConnectionIfOpen();
+        });
 
         stage.setTitle("MeChat!");
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
 
-        stage.setOnCloseRequest((WindowEvent event) -> {
-            mainViewController.closeConnectionIfOpen();
-        });
-
-        mainViewController.openLoginTab();
     }
 
     public static void main(String[] args) {
