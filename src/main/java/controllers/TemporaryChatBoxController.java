@@ -49,6 +49,7 @@ public class TemporaryChatBoxController {
             // Setting the name of the contact and an on-click event
             ChatBoxController controller = fxmlLoader.getController();
             controller.setNameLabel(tempName);
+            controller.setUserImage(Database.getUserImageById(tempNameId));
             controller.setMainViewControllerReference(mainViewControllerReference);
             chatBoxPane.setOnMouseClicked(controller::chatBoxOnClick);
             chatBoxPane.setCursor(Cursor.HAND);

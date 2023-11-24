@@ -1,6 +1,10 @@
 package controllers;
 
 import database.Database;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import util.Message;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -10,6 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import util.User;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,6 +27,8 @@ public class ChatBoxController {
     Label nameLabel;
     @FXML
     Pane chatBoxPane;
+    @FXML
+    ImageView userImage;
 
     private MainViewController mainViewControllerReference;
 
@@ -30,13 +37,13 @@ public class ChatBoxController {
         // Removing old border
         Pane oldChatBox = mainViewControllerReference.getSelectedChatBoxPane();
         if (oldChatBox != null) {
-            oldChatBox.setStyle("-fx-border-color: black; -fx-border-radius: 15px; -fx-border-width: 0.5px");
+            oldChatBox.getStyleClass().remove("chatPaneClicked");
             mainViewControllerReference.cleanChatBubbles();
         }
 
         // Creating and adding new border to the selected chat
         Pane newChatBox = (Pane) event.getSource();
-        newChatBox.setStyle("-fx-border-color: skyblue; -fx-border-radius: 15px; -fx-border-width: 0.5px");
+        newChatBox.getStyleClass().add("chatPaneClicked");
         mainViewControllerReference.setSelectedChatBoxPane(newChatBox);
 
         // Getting the Chat object based on the selected Pane
@@ -101,7 +108,16 @@ public class ChatBoxController {
         this.mainViewControllerReference = mainViewControllerReference;
     }
 
-    public MainViewController getMainViewControllerReference() {
-        return mainViewControllerReference;
+
+    public void setUserImage(String image) {
+        System.out.println(image);
+
+        Platform.runLater(() -> {
+        try {
+            userImage.setImage(new Image(getClass().getResource("/images/" + image).toExternalForm()));
+        } catch (NullPointerException e) {
+            userImage.setImage(new Image("/images/questionmark.png"));
+        }
+        });
     }
 }

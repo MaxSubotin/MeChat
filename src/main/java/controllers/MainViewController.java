@@ -42,9 +42,11 @@ public class MainViewController {
     @FXML
     AnchorPane root;
     @FXML
-    ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, female_AvatarImage, settingsDeleteAccountButton;
+    ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, female_AvatarImage;
     @FXML
     VBox historyVBox, chatVBox;
+    @FXML
+    HBox settingsDeleteAccountButton;
     @FXML
     TextField messageTextField, settingsUsernameField, settingsPasswordField;
     @FXML

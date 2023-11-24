@@ -49,7 +49,7 @@
                                              </font>
                                              <styleClass>
                                                 <String fx:value="roundLook" />
-                                                <String fx:value="bounce" />
+                                                <String fx:value="bounceSmall" />
                                              </styleClass>
                                              <cursor>
                                                 <Cursor fx:constant="HAND" />
@@ -97,7 +97,7 @@
                                                    <children>
                                                       <HBox fx:id="maleAvatarHBox" alignment="CENTER" fillHeight="false" maxHeight="62.0" maxWidth="62.0" minHeight="62.0" minWidth="62.0">
                                                          <children>
-                                                            <ImageView fx:id="male_AvatarImage" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounce">
+                                                            <ImageView fx:id="male_AvatarImage" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounceSmall">
                                                                <image>
                                                                   <Image url="@../images/male.png" />
                                                                </image>
@@ -115,7 +115,7 @@
                                                       </HBox>
                                                       <HBox fx:id="femaleAvatarHBox" alignment="CENTER" maxHeight="62.0" maxWidth="62.0" minHeight="62.0" minWidth="62.0">
                                                          <children>
-                                                            <ImageView fx:id="female_AvatarImage" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounce">
+                                                            <ImageView fx:id="female_AvatarImage" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounceSmall">
                                                                <image>
                                                                   <Image url="@../images/female.png" />
                                                                </image>
@@ -141,7 +141,7 @@
                                              </font>
                                              <styleClass>
                                                 <String fx:value="roundLook" />
-                                                <String fx:value="bounce" />
+                                                <String fx:value="bounceSmall" />
                                              </styleClass>
                                              <cursor>
                                                 <Cursor fx:constant="HAND" />

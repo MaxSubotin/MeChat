@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -48,7 +49,7 @@ public class LoadingViewController {
             }
 
         } else {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Error in loging-in", "Could not log into you account after you signed-up, please try to log-in later.");
+            showAlertWithMessage(Alert.AlertType.ERROR, "Error in logging-in", "Could not log into you account after you signed-up, please try to log-in later.");
             return false;
         }
         return true;
@@ -225,16 +226,20 @@ public class LoadingViewController {
                 chatBoxPane.setId(Database.compareStrings(regularChat.getSender(), regularChat.getReceiver()) + "_" + regularChat.getConversation_id());
                 chatBoxPane.setCursor(Cursor.HAND);
 
-                ChatBoxController controller = fxmlLoader.getController();
-                controller.setMainViewControllerReference(MVCR);
-                controller.setNameLabel(Database.getUsernameById(regularChat.getReceiver()));
+                User receiver = Database.getUserByUserId(regularChat.getReceiver());
+                System.out.println("Receiver: " +receiver.getName() +" "+ receiver.getId() +" "+ receiver.getUserImage());
+                if (receiver != null) {
+                    ChatBoxController controller = fxmlLoader.getController();
+                    controller.setMainViewControllerReference(MVCR);
+                    controller.setNameLabel(receiver.getName());
+                    controller.setUserImage(receiver.getUserImage());
 
-                regularChat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
-                if (!Objects.equals(regularChat.getMessages().get(0).getSender(), "ERROR")) { // based on the implementation of the catch block of "Database.getChatMessagesFromDatabase"
-                    MVCR.getHistoryVBox().getChildren().add(chatBoxPane);
-                    user.addChatToUser(chatBoxPane, regularChat); // adding the pane - chat reference to the hashmap for later use
+                    regularChat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
+                    if (regularChat.getMessages() != null) {
+                        MVCR.getHistoryVBox().getChildren().add(chatBoxPane);
+                        user.addChatToUser(chatBoxPane, regularChat); // adding the pane - chat reference to the hashmap for later use
+                    }
                 }
-
             } catch (IOException e) {
                 showAlertWithMessage(Alert.AlertType.ERROR,"Error Loading Messages", "Could not load some messages from " + regularChat.getReceiver() + ". Please try again later.");
                 return false;

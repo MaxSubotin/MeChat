@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
@@ -14,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="root" maxHeight="600.0" maxWidth="900.0" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #353839;" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainViewController">
+<AnchorPane fx:id="root" maxHeight="600.0" maxWidth="900.0" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #353839;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainViewController">
    <children>
       <ScrollPane hbarPolicy="NEVER" minWidth="200.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="561.0" prefWidth="200.0" style="-fx-background-color: #404243;" stylesheets="@style.css">
          <content>
@@ -64,7 +65,7 @@
          <children>
             <HBox alignment="CENTER" prefHeight="40.0" prefWidth="201.0" spacing="35.0">
                <children>
-                  <ImageView fx:id="profileButton" fitHeight="23.0" fitWidth="23.0" onMouseClicked="#profileButtonOnClick" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fx:id="profileButton" fitHeight="23.0" fitWidth="23.0" onMouseClicked="#profileButtonOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounceBig">
                      <image>
                         <Image url="@../images/person.png" />
                      </image>
@@ -72,7 +73,7 @@
                         <Cursor fx:constant="HAND" />
                      </cursor>
                   </ImageView>
-                  <ImageView fx:id="newChatButton" fitHeight="23.0" fitWidth="23.0" onMouseClicked="#newChatButtonOnClick" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fx:id="newChatButton" fitHeight="23.0" fitWidth="23.0" onMouseClicked="#newChatButtonOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounceBig">
                      <image>
                         <Image url="@../images/newmessage.png" />
                      </image>
@@ -80,7 +81,7 @@
                         <Cursor fx:constant="HAND" />
                      </cursor>
                   </ImageView>
-                  <ImageView fx:id="settingsButton" fitHeight="23.0" fitWidth="23.0" onMouseClicked="#settingsButtonOnClick" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fx:id="settingsButton" fitHeight="23.0" fitWidth="23.0" onMouseClicked="#settingsButtonOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounceBig">
                      <image>
                         <Image url="@../images/gearshape.png" />
                      </image>
@@ -95,7 +96,7 @@
             </HBox>
             <HBox alignment="CENTER_LEFT" prefHeight="40.0" prefWidth="702.0" spacing="5.0" style="-fx-background-color: #2B2E30;">
                <children>
-                  <TextField fx:id="messageTextField" prefHeight="30.0" prefWidth="660.0" promptText="your message . . ." style="-fx-background-color: transparent; -fx-text-fill: #F5F5F5; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;">
+                  <TextField fx:id="messageTextField" prefHeight="30.0" prefWidth="660.0" promptText="your message . . ." style="-fx-background-color: transparent; -fx-text-fill: #F5F5F5; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" styleClass="roundLook">
                      <font>
                         <Font name="Damascus Regular" size="14.0" />
                      </font>
@@ -103,7 +104,7 @@
                         <Cursor fx:constant="TEXT" />
                      </cursor>
                   </TextField>
-                  <ImageView fx:id="sendMessageButton" fitHeight="25.0" fitWidth="25.0" onMouseClicked="#sendMessageButtonOnClick" pickOnBounds="true" preserveRatio="true" rotate="45.0" style="-fx-background-color: black;">
+                  <ImageView fx:id="sendMessageButton" fitHeight="25.0" fitWidth="25.0" onMouseClicked="#sendMessageButtonOnClick" pickOnBounds="true" preserveRatio="true" rotate="45.0" style="-fx-background-color: black;" styleClass="bounceBig">
                      <image>
                         <Image url="@../images/paperplane.png" />
                      </image>
@@ -117,7 +118,56 @@
       </HBox>
       <Pane fx:id="loginAndSignupPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: rgba(0,0,0,0.75);" visible="false">
          <children>
-            <Button fx:id="closeProfileButton" layoutX="837.0" layoutY="14.0" mnemonicParsing="false" onAction="#closeProfileButtonOnClick" style="-fx-background-color: none;" text="X" textFill="WHITE">
+            <Pane layoutX="300.0" layoutY="115.0" prefHeight="350.0" prefWidth="300.0" style="-fx-background-color: whitesmoke; -fx-background-radius: 25;">
+               <children>
+                  <VBox alignment="CENTER" prefHeight="350.0" prefWidth="300.0" spacing="10.0">
+                     <children>
+                        <ImageView fx:id="userPictureImageView" fitHeight="130.0" fitWidth="130.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/male.png" />
+                           </image>
+                           <VBox.margin>
+                              <Insets bottom="20.0" />
+                           </VBox.margin>
+                        </ImageView>
+                        <HBox alignment="CENTER" prefHeight="25.0" prefWidth="200.0" spacing="10.0">
+                           <children>
+                              <Label text="Username:">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="userUsernameLabel" text="USERNAME">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <Button fx:id="logoutButton" mnemonicParsing="false" text="Logout">
+                           <VBox.margin>
+                              <Insets top="30.0" />
+                           </VBox.margin>
+                           <font>
+                              <Font size="16.0" />
+                           </font>
+                           <styleClass>
+                              <String fx:value="roundLook" />
+                              <String fx:value="buttonPaddingBig" />
+                              <String fx:value="bounceSmall" />
+                           </styleClass>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </Button>
+                     </children>
+                     <padding>
+                        <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                     </padding>
+                  </VBox>
+               </children>
+            </Pane>
+            <Button fx:id="closeProfileButton" layoutX="554.0" layoutY="131.0" maxHeight="30.0" maxWidth="30.0" mnemonicParsing="false" onAction="#closeProfileButtonOnClick" prefHeight="30.0" prefWidth="30.0" style="-fx-background-color: none; -fx-border-color: none; -fx-text-fill: black; -fx-padding: 0;" styleClass="bounceSmall" text="X">
                <font>
                   <Font name="Damascus Regular" size="24.0" />
                </font>
@@ -125,63 +175,67 @@
                   <Cursor fx:constant="HAND" />
                </cursor>
             </Button>
-            <Pane layoutX="263.0" layoutY="138.0" prefHeight="324.0" prefWidth="375.0" style="-fx-background-color: whitesmoke;">
-               <children>
-                  <VBox alignment="CENTER" layoutX="88.0" layoutY="62.0" prefHeight="200.0" prefWidth="200.0">
-                     <children>
-                        <HBox prefHeight="25.0" prefWidth="200.0" spacing="10.0">
-                           <children>
-                              <Label text="Username:" />
-                              <Label fx:id="userUsernameLabel" text="USERNAME" />
-                           </children>
-                        </HBox>
-                        <HBox prefHeight="50.0" prefWidth="200.0" spacing="10.0">
-                           <children>
-                              <Label text="Profile Picture:" />
-                              <ImageView fx:id="userPictureImageView" fitHeight="90.0" fitWidth="90.0" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../images/male.png" />
-                                 </image>
-                              </ImageView>
-                           </children>
-                        </HBox>
-                     </children>
-                  </VBox>
-               </children>
-            </Pane>
          </children>
       </Pane>
       <Pane fx:id="settingsPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: rgba(0,0,0,0.75);" visible="false">
          <children>
-            <Pane layoutX="263.0" layoutY="127.0" prefHeight="270.0" prefWidth="375.0" style="-fx-background-color: #f5f5f5; -fx-background-radius: 5; -fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;">
+            <Pane layoutX="263.0" layoutY="125.0" prefHeight="350.0" prefWidth="400.0" style="-fx-background-color: whitesmoke; -fx-background-radius: 25;">
                <children>
-                  <VBox alignment="CENTER" prefHeight="270.0" prefWidth="375.0">
+                  <VBox alignment="CENTER" prefHeight="350.0" prefWidth="400.0">
                      <children>
                         <Label alignment="CENTER" prefHeight="17.0" prefWidth="375.0" text="Edit your information here:">
                            <font>
-                              <Font name="Damascus Regular" size="18.0" />
+                              <Font name="Damascus Regular" size="22.0" />
                            </font>
                            <VBox.margin>
-                              <Insets bottom="5.0" />
+                              <Insets bottom="20.0" />
                            </VBox.margin>
                         </Label>
                         <HBox alignment="CENTER" prefHeight="32.0" prefWidth="250.0" spacing="10.0">
                            <children>
-                              <Label text="New Username:" />
-                              <TextField fx:id="settingsUsernameField" />
-                              <Button fx:id="settingsUsernameSaveButton" mnemonicParsing="false" onAction="#settingsUsernameSaveButtonOnClick" text="Save" />
+                              <Label text="New Username:">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font></Label>
+                              <TextField fx:id="settingsUsernameField" styleClass="roundLook" />
+                              <Button fx:id="settingsUsernameSaveButton" mnemonicParsing="false" onAction="#settingsUsernameSaveButtonOnClick" text="Save">
+                                 <styleClass>
+                                    <String fx:value="buttonPaddingSmall" />
+                                    <String fx:value="roundLook" />
+                                    <String fx:value="bounceSmall" />
+                                 </styleClass>
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor></Button>
                            </children>
                         </HBox>
                         <HBox alignment="CENTER" prefHeight="32.0" prefWidth="250.0" spacing="10.0">
                            <children>
-                              <Label text="New Password: " />
-                              <TextField fx:id="settingsPasswordField" />
-                              <Button fx:id="settingPasswordSaveButton" mnemonicParsing="false" onAction="#settingsPasswordSaveButtonOnClick" text="Save" />
+                              <Label text="New Password: ">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font></Label>
+                              <TextField fx:id="settingsPasswordField" styleClass="roundLook" />
+                              <Button fx:id="settingPasswordSaveButton" mnemonicParsing="false" onAction="#settingsPasswordSaveButtonOnClick" text="Save">
+                                 <styleClass>
+                                    <String fx:value="roundLook" />
+                                    <String fx:value="buttonPaddingSmall" />
+                                    <String fx:value="bounceSmall" />
+                                 </styleClass>
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor></Button>
                            </children>
+                           <VBox.margin>
+                              <Insets top="5.0" />
+                           </VBox.margin>
                         </HBox>
-                        <HBox alignment="CENTER" prefHeight="80.0" prefWidth="375.0" spacing="15.0">
+                        <HBox alignment="CENTER" prefHeight="80.0" prefWidth="375.0" spacing="10.0">
                            <children>
-                              <Label text="Change Your Avatar:" />
+                              <Label text="Change Your Avatar:">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font></Label>
                               <HBox fx:id="maleAvatarHBox" alignment="CENTER" fillHeight="false" maxHeight="62.0" maxWidth="62.0" minHeight="62.0" minWidth="62.0">
                                  <children>
                                     <ImageView fx:id="male_AvatarImage" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true">
@@ -215,7 +269,15 @@
                                     <Insets top="-3.0" />
                                  </padding>
                               </HBox>
-                              <Button fx:id="settingAvatarSaveButton" mnemonicParsing="false" onAction="#settingsAvatarSaveButtonOnClick" text="Save" />
+                              <Button fx:id="settingAvatarSaveButton" mnemonicParsing="false" onAction="#settingsAvatarSaveButtonOnClick" text="Save">
+                                 <styleClass>
+                                    <String fx:value="roundLook" />
+                                    <String fx:value="buttonPaddingSmall" />
+                                    <String fx:value="bounceSmall" />
+                                 </styleClass>
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor></Button>
                            </children>
                            <padding>
                               <Insets bottom="5.0" top="5.0" />
@@ -223,10 +285,13 @@
                         </HBox>
                         <HBox alignment="TOP_CENTER" maxHeight="50.0" prefHeight="35.0" prefWidth="200.0" spacing="50.0">
                            <children>
-                              <HBox alignment="CENTER" maxHeight="35.0" prefHeight="35.0" prefWidth="150.0" spacing="10.0">
+                              <HBox fx:id="settingsDeleteAccountButton" alignment="CENTER" maxHeight="35.0" onMouseClicked="#settingsDeleteAccountButtonOnClick" prefHeight="35.0" prefWidth="178.0" spacing="10.0" styleClass="bounceSmall">
                                  <children>
-                                    <Label text="Delete Your Account" />
-                                    <ImageView fx:id="settingsDeleteAccountButton" fitHeight="30.0" fitWidth="30.0" onMouseClicked="#settingsDeleteAccountButtonOnClick" pickOnBounds="true" preserveRatio="true">
+                                    <Label text="Delete Your Account">
+                                       <font>
+                                          <Font size="16.0" />
+                                       </font></Label>
+                                    <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
                                        <cursor>
                                           <Cursor fx:constant="HAND" />
                                        </cursor>
@@ -238,13 +303,30 @@
                                  <HBox.margin>
                                     <Insets left="10.0" right="10.0" />
                                  </HBox.margin>
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor>
                               </HBox>
                            </children>
-                        </HBox>
-                        <Button fx:id="settingsCloseButton" alignment="CENTER" mnemonicParsing="false" onAction="#closeSettingsButtonOnClick" text="Close">
                            <VBox.margin>
                               <Insets top="5.0" />
                            </VBox.margin>
+                        </HBox>
+                        <Button fx:id="settingsCloseButton" alignment="CENTER" mnemonicParsing="false" onAction="#closeSettingsButtonOnClick" text="Close">
+                           <VBox.margin>
+                              <Insets top="20.0" />
+                           </VBox.margin>
+                           <styleClass>
+                              <String fx:value="roundLook" />
+                              <String fx:value="buttonPaddingBig" />
+                              <String fx:value="bounceSmall" />
+                           </styleClass>
+                           <font>
+                              <Font size="16.0" />
+                           </font>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
                         </Button>
                      </children>
                   </VBox>

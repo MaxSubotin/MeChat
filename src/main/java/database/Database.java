@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+// error counter: 25
 
 public class Database {
 
@@ -99,7 +100,7 @@ public class Database {
         } catch (SQLException e) {
             catchBlockCode(e);
             showAlertWithMessage(Alert.AlertType.ERROR, "Could not load table", "Could not load the table, table name: " + tableName + "\nERROR #3");
-            chatMessages.add(0,new Message("ERROR","ERROR","ERROR","ERROR","ERROR"));
+            chatMessages = null;
         }
 
         return chatMessages;
@@ -167,7 +168,7 @@ public class Database {
             }
         }
         catch (SQLException e) {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Could not user id", "Error finding the user id by username, try again later.\nERROR #6");
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not get user id", "Error finding the user id by username, try again later.\nERROR #6");
             catchBlockCode(e);
         }
 
@@ -190,11 +191,57 @@ public class Database {
             }
         }
         catch (SQLException e) {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Could not username", "Error finding the username by user id, try again later.\nERROR #7");
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not get username", "Error finding the username by user id, try again later.\nERROR #7");
             catchBlockCode(e);
         }
 
         return username;
+    }
+
+    public static String getUserImageById(String userId) {
+        String query = "SELECT * FROM users WHERE id = ?";
+        String userImage = "male.png";
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(query)) {
+
+            // Find the user in the database and create a User object
+            pst1.setString(1, userId);
+            ResultSet rs = pst1.executeQuery();
+
+            if (rs.next()) {
+                userImage = rs.getString("image");
+            }
+        }
+        catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not get user image", "Error finding the user image by user id, try again later.\nERROR #25");
+            catchBlockCode(e);
+        }
+
+        return userImage;
+    }
+
+    public static User getUserByUserId(String userId) {
+        String query = "SELECT * FROM users WHERE id = ?";
+        User returnedUser = null;
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(query)) {
+
+            // Find the user in the database and create a User object
+            pst1.setString(1, userId);
+            ResultSet rs = pst1.executeQuery();
+
+            if (rs.next()) {
+                returnedUser = new User(rs.getString("username"), userId ,rs.getString("image"));
+            }
+        }
+        catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not get user image", "Error finding the user image by user id, try again later.\nERROR #25");
+            catchBlockCode(e);
+        }
+
+        return returnedUser;
     }
 
     // ------------------------------------------------------------------ //
@@ -230,7 +277,7 @@ public class Database {
             insertPstUsers.executeUpdate();
 
         } catch (SQLException e) {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Could not add session to the database", "Error adding the user session to the database, try again later.\nERROR #8");
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not add session to the database", "Error adding the user session to the database, try again later.\nERROR #24");
             catchBlockCode(e);
             return false;
         }

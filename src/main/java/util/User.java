@@ -55,6 +55,10 @@ public class User {
         return userImage;
     }
 
+    public String getUserImageWithoutSuffix() {
+        return userImage.split(".png")[0];
+    }
+
     public void setUserImage(String image) {
         this.userImage = image + ".png";
         if (Objects.equals(image, "male"))

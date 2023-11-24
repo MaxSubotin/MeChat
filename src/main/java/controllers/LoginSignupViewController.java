@@ -99,7 +99,7 @@ public class LoginSignupViewController {
         String userId = IdGenerator.generateUniqueUserId(); // Generate a unique user id
         User user = new User(username, userId, userImageName);
 
-        if (Database.addUserToDatabase(user.getName(), HashedPassword, user.getId(), user.getUserImage())) {
+        if (Database.addUserToDatabase(user.getName(), HashedPassword, user.getId(), user.getUserImageWithoutSuffix())) {
 
             // 5. Change to loading view to load the main app
             cleanSignupForm();
