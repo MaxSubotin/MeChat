@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="chatBoxPane" maxWidth="183.0" nodeOrientation="LEFT_TO_RIGHT" onMouseClicked="#chatBoxOnClick" prefHeight="75.0" prefWidth="180.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.ChatBoxController">
+<Pane fx:id="chatBoxPane" maxWidth="183.0" nodeOrientation="LEFT_TO_RIGHT" onMouseClicked="#chatBoxOnClick" prefHeight="75.0" prefWidth="180.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/20.0.0" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.ChatBoxController">
    <children>
       <HBox alignment="CENTER" prefHeight="75.0" prefWidth="180.0" spacing="10.0">
          <children>

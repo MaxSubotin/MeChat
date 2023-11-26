@@ -3,7 +3,7 @@
 /*
     light-green:  #93B1A6;
     medium-green:  #5C8374;
-    dark-green:  #183D3D;
+    dark-green:  #335656;
 */
 
 
@@ -40,28 +40,30 @@
 
 .button {
     -fx-background-color: #5C8374;
-    -fx-border-color: #183D3D;
+    -fx-border-color: #93B1A6;
     -fx-border-insets: 1 1 0 1;
     -fx-border-width: 2px;
     -fx-padding: 6px;
     -fx-text-fill: whitesmoke;
 }
 
+.button:pressed {
+    -fx-background-color: #335656;
+    -fx-text-fill: whitesmoke;
+}
 
 .text-field {
     -fx-background-color: whitesmoke;
     -fx-border-color: #5C8374;
     -fx-border-width: 2px;
     -fx-border-insets: 1 1 1 1;
-
 }
 
-
 .tab {
-    -fx-background-color: #93B1A6;
-    -fx-background-insets: 0 7 -2 0;
-    -fx-border-insets: 1 8 -2 1;
-    -fx-border-color: #5C8374;
+    -fx-background-color: #5C8374;
+    -fx-background-insets: 0 10 -2 0;
+    -fx-border-insets: 0 10 -2 0;
+    -fx-border-color: #93B1A6;
     -fx-border-radius: 8 8 0 0;
     -fx-background-radius: 10 10 0 0;
     -fx-border-width: 2px;
@@ -73,7 +75,7 @@
 
 /* - - - - - - - - - - - - - - - - - - */
 .tab:selected {
-    -fx-background-color: #183D3D;
+    -fx-background-color: #335656;
 }
 
 .tab:selected .tab-label {
@@ -93,12 +95,12 @@
     -fx-focus-color: transparent;
 }
 
-
 .roundLook {
     -fx-border-radius: 30px;
     -fx-background-radius: 30px;
-    -fx-border-color: #606C5D;
-    -fx-border-width: 1px;
+    -fx-border-color: #93B1A6;
+    -fx-border-width: 2px;
+    -fx-border-insets: -1 -1 -1 -1;
 }
 
 .buttonPaddingBig {
@@ -109,6 +111,13 @@
     -fx-padding: 5px 10px;
 }
 
+.buttonBlackToWhite {
+    -fx-text-fill: black;
+}
+
+.buttonBlackToWhite: pressed {
+    -fx-text-fill: whitesmoke;
+}
 
 /* Bounce for Buttons */
 
@@ -142,8 +151,6 @@
 
 /* Hovering Chat Panes */
 
-
-
 .chatPaneHover {
     -fx-background-color: transparent;
     -fx-background-radius: 15;
@@ -153,12 +160,47 @@
 }
 
 .chatPaneHover:hover {
-    -fx-border-color: skyblue;
+    -fx-border-color: #93B1A6;;
     -fx-border-width: 1.5px
 }
 
 .chatPaneClicked {
-    -fx-background-color: skyblue;
-
+    -fx-background-color: #5C8374;
 }
+
+/* Temporary Chat Box Buttons */
+
+.confirmButton {
+    -fx-background-color: #5C8374; /* lightgreen */
+    -fx-border-color: #93B1A6;
+    -fx-border-width: 1.5px;
+    -fx-text-fill: whitesmoke;
+}
+
+.confirmButton:pressed {
+    -fx-text-fill: black
+}
+
+
+.cancelButton {
+    -fx-background-color: #335656; /* lightpink */
+    -fx-border-color: #93B1A6;
+    -fx-border-width: 1.5px;
+    -fx-text-fill: whitesmoke;
+}
+
+.cancelButton:pressed {
+    -fx-text-fill: black
+}
+
+.usernameField {
+    -fx-border-width: 1.5px;
+}
+
+/* Search Bar */
+.messageTextField {
+    -fx-border-width: 1.5px;
+    -fx-border-color: #5C8374;
+}
+
 

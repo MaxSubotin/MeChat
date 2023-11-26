@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
@@ -9,35 +10,49 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<Pane maxWidth="183.0" prefWidth="180.0" style="-fx-background-color: #2B2E30; -fx-background-radius: 10;" xmlns="http://javafx.com/javafx/20.0.0" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.TemporaryChatBoxController">
+<Pane maxWidth="183.0" prefWidth="180.0" style="-fx-background-color: #2B2E30; -fx-background-radius: 10;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/20.0.0" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.TemporaryChatBoxController">
    <children>
-      <VBox maxWidth="183.0" prefHeight="80.0" prefWidth="180.0" spacing="10.0">
+      <VBox layoutX="10.0" maxWidth="183.0" prefHeight="80.0" prefWidth="160.0" spacing="10.0">
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </padding>
          <children>
-            <TextField fx:id="nameTextField" prefHeight="30.0" prefWidth="160.0" promptText="Name / Number . . ." style="-fx-background-color: #404243; -fx-text-fill: white;">
+            <TextField fx:id="nameTextField" prefHeight="30.0" prefWidth="150.0" promptText="enter a username" style="-fx-background-color: #404243; -fx-text-fill: white;">
                <font>
                   <Font name="Damascus Regular" size="12.0" />
                </font>
+               <styleClass>
+                  <String fx:value="roundLook" />
+                  <String fx:value="usernameField" />
+               </styleClass>
             </TextField>
-            <HBox alignment="CENTER" prefHeight="40.0" prefWidth="160.0" spacing="15.0">
+            <HBox alignment="CENTER" prefHeight="40.0" prefWidth="160.0" spacing="10.0">
                <children>
-                  <Button fx:id="confirmButton" alignment="CENTER" mnemonicParsing="false" onAction="#confirmButtonOnClick" prefWidth="65.0" style="-fx-background-color: lightgreen;" text="Confirm" textAlignment="CENTER">
+                  <Button fx:id="confirmButton" alignment="CENTER" mnemonicParsing="false" onAction="#confirmButtonOnClick" prefWidth="65.0" text="Confirm" textAlignment="CENTER">
                      <font>
                         <Font name="Damascus Regular" size="12.0" />
                      </font>
                      <cursor>
                         <Cursor fx:constant="HAND" />
                      </cursor>
+                     <styleClass>
+                        <String fx:value="roundLook" />
+                        <String fx:value="bounceSmall" />
+                        <String fx:value="confirmButton" />
+                     </styleClass>
                   </Button>
-                  <Button fx:id="cancelButton" alignment="CENTER" mnemonicParsing="false" onAction="#cancelButtonOnClick" prefWidth="65.0" style="-fx-background-color: lightpink;" text="Cancel" textAlignment="CENTER">
+                  <Button fx:id="cancelButton" alignment="CENTER" mnemonicParsing="false" onAction="#cancelButtonOnClick" prefWidth="65.0" text="Cancel" textAlignment="CENTER">
                      <font>
                         <Font name="Damascus Regular" size="12.0" />
                      </font>
                      <cursor>
                         <Cursor fx:constant="HAND" />
                      </cursor>
+                     <styleClass>
+                        <String fx:value="bounceSmall" />
+                        <String fx:value="roundLook" />
+                        <String fx:value="cancelButton" />
+                     </styleClass>
                   </Button>
                </children>
             </HBox>

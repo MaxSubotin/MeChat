@@ -94,9 +94,7 @@ public class LoadingViewController {
                                     } else {
                                         // Find the correct chat box pane (on the right side) and rename the name label on it
                                         String chatId = Database.compareStrings(receivedMessage.getSender(), user.getId());
-                                        System.out.println("Looking for: " + chatId);
                                         for (Pane chatPane : user.userChats.keySet()) {
-                                            System.out.println("#: " + chatPane.getId());
                                             if (chatPane.getId().contains(chatId))
                                                 ((Label) (chatPane.getChildren()).get(0)).setText(newName);
                                         }
@@ -227,7 +225,6 @@ public class LoadingViewController {
                 chatBoxPane.setCursor(Cursor.HAND);
 
                 User receiver = Database.getUserByUserId(regularChat.getReceiver());
-                System.out.println("Receiver: " +receiver.getName() +" "+ receiver.getId() +" "+ receiver.getUserImage());
                 if (receiver != null) {
                     ChatBoxController controller = fxmlLoader.getController();
                     controller.setMainViewControllerReference(MVCR);

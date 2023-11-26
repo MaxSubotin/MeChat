@@ -110,14 +110,12 @@ public class ChatBoxController {
 
 
     public void setUserImage(String image) {
-        System.out.println(image);
-
         Platform.runLater(() -> {
-        try {
-            userImage.setImage(new Image(getClass().getResource("/images/" + image).toExternalForm()));
-        } catch (NullPointerException e) {
-            userImage.setImage(new Image("/images/questionmark.png"));
-        }
+            try {
+                userImage.setImage(new Image(getClass().getResource("/images/" + image).toExternalForm()));
+            } catch (NullPointerException e) {
+                userImage.setImage(new Image("/images/questionmark.png"));
+            }
         });
     }
 }

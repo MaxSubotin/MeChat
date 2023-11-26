@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="root" maxHeight="600.0" maxWidth="900.0" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #353839;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainViewController">
+<AnchorPane fx:id="root" maxHeight="600.0" maxWidth="900.0" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #353839;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/20.0.0" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainViewController">
    <children>
       <ScrollPane hbarPolicy="NEVER" minWidth="200.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="561.0" prefWidth="200.0" style="-fx-background-color: #404243;" stylesheets="@style.css">
          <content>
@@ -96,13 +96,17 @@
             </HBox>
             <HBox alignment="CENTER_LEFT" prefHeight="40.0" prefWidth="702.0" spacing="5.0" style="-fx-background-color: #2B2E30;">
                <children>
-                  <TextField fx:id="messageTextField" prefHeight="30.0" prefWidth="660.0" promptText="your message . . ." style="-fx-background-color: transparent; -fx-text-fill: #F5F5F5; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" styleClass="roundLook">
+                  <TextField fx:id="messageTextField" prefHeight="30.0" prefWidth="660.0" promptText="your message . . ." style="-fx-background-color: transparent; -fx-text-fill: #F5F5F5; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;">
                      <font>
                         <Font name="Damascus Regular" size="14.0" />
                      </font>
                      <cursor>
                         <Cursor fx:constant="TEXT" />
                      </cursor>
+                     <styleClass>
+                        <String fx:value="roundLook" />
+                        <String fx:value="messageTextField" />
+                     </styleClass>
                   </TextField>
                   <ImageView fx:id="sendMessageButton" fitHeight="25.0" fitWidth="25.0" onMouseClicked="#sendMessageButtonOnClick" pickOnBounds="true" preserveRatio="true" rotate="45.0" style="-fx-background-color: black;" styleClass="bounceBig">
                      <image>
@@ -203,6 +207,7 @@
                                     <String fx:value="buttonPaddingSmall" />
                                     <String fx:value="roundLook" />
                                     <String fx:value="bounceSmall" />
+                                    <String fx:value="button" />
                                  </styleClass>
                                  <cursor>
                                     <Cursor fx:constant="HAND" />
