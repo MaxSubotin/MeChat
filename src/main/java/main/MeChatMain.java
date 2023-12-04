@@ -19,6 +19,7 @@ public class MeChatMain extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/loginSignupView.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 900, 600, Color.web("rgba(0, 0, 0, 0.75)"));
         LoginSignupViewController controller = fxmlLoader.getController();
+        controller.setPrimaryStage(stage);
 
         stage.setTitle("MeChat!");
         stage.setScene(scene);

@@ -7,7 +7,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.chart.PieChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -40,7 +39,7 @@ public class LoadingViewController {
         ArrayList<RegularChat> userChats = Database.getUsersChatsFromDatabase(user.getId());
 
         // Establish a new websocket connection, login the user and add chats to the screen
-        if (handleUserLogin(user)) {
+        if (createWebsocketConnection(user)) {
             if (userChats != null) {
                 if (!addUsersChatsToScreen(user, userChats)) {
                     showAlertWithMessage(Alert.AlertType.ERROR, "Error loading chats", "Could not load your chats to the screen, please try again later.");
@@ -59,7 +58,7 @@ public class LoadingViewController {
     // - - - - - - - - - - - User Login Logic  - - - - - - - - - - - //
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
-    private boolean handleUserLogin(User user) {
+    private boolean createWebsocketConnection(User user) {
         try { // Initialize the client web socket
             String session = UUID.randomUUID().toString(); // Generate a unique session or token
             webSocketClient = new CustomWebSocketClient(new URI("ws://localhost:8888/socket?session=" + session), user.getName(), MVCR.getCurrentScene()) {
