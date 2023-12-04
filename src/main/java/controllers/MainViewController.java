@@ -12,6 +12,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -193,6 +194,25 @@ public class MainViewController {
     @FXML
     public void closeProfileButtonOnClick() {
         loginAndSignupPane.setVisible(false);
+    }
+
+    @FXML
+    public void logoutButtonOnClick() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/loginSignupView.fxml"));
+            Scene scene = new Scene(fxmlLoader.load(), 900, 600, Color.web("rgba(0, 0, 0, 0.75)"));
+            LoginSignupViewController controller = fxmlLoader.getController();
+
+            Stage currentStage = (Stage) root.getScene().getWindow();
+            controller.setPrimaryStage(currentStage);
+            currentStage.setScene(scene);
+
+            webSocketClient.close();
+            MyUser = null;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML

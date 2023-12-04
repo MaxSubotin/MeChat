@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="root" maxHeight="600.0" maxWidth="900.0" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #353839;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/20.0.0" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainViewController">
+<AnchorPane fx:id="root" maxHeight="600.0" maxWidth="900.0" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #353839;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainViewController">
    <children>
       <ScrollPane hbarPolicy="NEVER" minWidth="200.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="561.0" prefWidth="200.0" style="-fx-background-color: #404243;" stylesheets="@style.css">
          <content>
@@ -148,7 +148,7 @@
                               </Label>
                            </children>
                         </HBox>
-                        <Button fx:id="logoutButton" mnemonicParsing="false" text="Logout">
+                        <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#logoutButtonOnClick" text="Logout">
                            <VBox.margin>
                               <Insets top="30.0" />
                            </VBox.margin>
