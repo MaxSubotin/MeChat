@@ -20,10 +20,6 @@ public class MeChatMain extends Application {
         Scene scene = new Scene(fxmlLoader.load(), 900, 600, Color.web("rgba(0, 0, 0, 0.75)"));
         LoginSignupViewController controller = fxmlLoader.getController();
 
-        stage.setOnCloseRequest((WindowEvent event) -> {
-            controller.closeConnectionIfOpen();
-        });
-
         stage.setTitle("MeChat!");
         stage.setScene(scene);
         stage.setResizable(false);

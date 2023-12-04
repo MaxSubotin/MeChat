@@ -14,6 +14,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import util.*;
 
 import java.io.IOException;
@@ -42,20 +43,25 @@ public class LoginSignupViewController {
             return;
         }
 
-        // 2. Fetch user data from the database
-        User user = Database.getUserFromDatabase(usernameInput,passwordInput);
-        if (user == null) return;
-
-
-        // 3. Create the loading view scene
+        // 2. Create the loading view scene
         Scene scene = loadLoadingView();
         if (scene == null) {
             showAlertWithMessage(Alert.AlertType.ERROR,"Error loading the loading scene", "Could not load the loading scene properly, try again later.");
             return;
         }
 
+        // 3. Show loading view
+        Stage currentStage = (Stage) loginUsernameField.getScene().getWindow();
+        currentStage.setScene(scene);
+
+
+        // 4. Fetch user data from the database
+        User user = Database.getUserFromDatabase(usernameInput,passwordInput);
+        if (user == null) return;
+
         cleanLoginForm();
-        loadUserDataAndSwitchToMain(user, scene);
+        loadUserDataAndSwitchToMain(user, currentStage);
+
     }
 
     @FXML
@@ -88,12 +94,16 @@ public class LoginSignupViewController {
             return;
         }
 
-        // 3. Create the loading view scene
+        // 2. Create the loading view scene
         Scene scene = loadLoadingView();
         if (scene == null) {
             showAlertWithMessage(Alert.AlertType.ERROR,"Error loading the loading scene", "Could not load the loading scene properly, try again later.");
             return;
         }
+
+        // 3. Show loading view
+        Stage currentStage = (Stage) loginUsernameField.getScene().getWindow();
+        currentStage.setScene(scene);
 
         // 4. Create a new user
         String userId = IdGenerator.generateUniqueUserId(); // Generate a unique user id
@@ -103,7 +113,7 @@ public class LoginSignupViewController {
 
             // 5. Change to loading view to load the main app
             cleanSignupForm();
-            loadUserDataAndSwitchToMain(user, scene);
+            loadUserDataAndSwitchToMain(user, currentStage);
         }
     }
 
@@ -160,21 +170,17 @@ public class LoginSignupViewController {
     }
 
 
-    private void loadUserDataAndSwitchToMain(User user, Scene scene) {
+    private void loadUserDataAndSwitchToMain(User user, Stage currentStage) {
         // This method handles both Login and Signup, it shows the loading view followed by the main view. Also handles all the user data loading
 
-        // 1. Show loading view
-        Stage currentStage = (Stage) loginUsernameField.getScene().getWindow();
-        currentStage.setScene(scene);
-
-        // 2. Start working on loading user data and showing the main view
+        // 1. Start working on loading user data and showing the main view
         Scene mainScene = loadMainView();
         if (mainScene == null) {
             showAlertWithMessage(Alert.AlertType.ERROR,"Error loading the main scene", "Could not load the main scene properly, try again later.");
             return;
         }
 
-        // 3. Setting up code for the JavaFX Thread:
+        // 2. Setting up code for the JavaFX Thread:
         Platform.runLater(() -> {
             // Create a Task obj that will perform the task of loading user data from the database and establish a connection to the server
             Task<Void> task = new Task<>() {
@@ -199,6 +205,9 @@ public class LoginSignupViewController {
                     MVCR.MyUser = user;
                     MVCR.webSocketClient = LVCR.webSocketClient;
                     currentStage.setScene(mainScene);
+                    currentStage.setOnCloseRequest((WindowEvent e) -> {
+                        this.closeConnectionIfOpen();
+                    });
                 });
             });
 
