@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-// error counter: 25
+// error counter: 26
 
 public class Database {
 
@@ -208,7 +208,7 @@ public class Database {
             ResultSet rs = pst1.executeQuery();
 
             if (rs.next()) {
-                userImage = rs.getString("image");
+                userImage = rs.getString("image") + ".png";
             }
         }
         catch (SQLException e) {
@@ -522,6 +522,31 @@ public class Database {
             catchBlockCode(e);
             return false;
         }
+        return true;
+    }
+
+    public static boolean deleteRegularChat(RegularChat chat) {
+        // remove the conversation and remove the conversation table
+
+        String removeConversationQuery = "DELETE FROM conversations WHERE conversation_id = ?";
+        String removeTableQuery = "DROP TABLE " + Database.compareStrings(chat.getSender(), chat.getReceiver()) + "_" + chat.getConversation_id();
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(removeConversationQuery)) {
+
+            pst1.setInt(1, chat.getConversation_id());
+            pst1.executeUpdate();
+
+            try (Statement stmt = con.createStatement()) {
+                stmt.executeUpdate(removeTableQuery);
+            }
+
+        } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not delete chat", "Error in deleting a chat from the database, try again later.\nERROR #26");
+            catchBlockCode(e);
+            return false;
+        }
+
         return true;
     }
 

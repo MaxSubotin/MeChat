@@ -1,12 +1,11 @@
 package controllers;
 
 import database.Database;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import util.Message;
 import util.RegularChat;
@@ -51,8 +50,10 @@ public class TemporaryChatBoxController {
             controller.setNameLabel(tempName);
             controller.setUserImage(Database.getUserImageById(tempNameId));
             controller.setMainViewControllerReference(mainViewControllerReference);
+            controller.setContextMenu();
             chatBoxPane.setOnMouseClicked(controller::chatBoxOnClick);
             chatBoxPane.setCursor(Cursor.HAND);
+
 
             // Removing the temporary chat box and adding the new one
             removeLastElement();

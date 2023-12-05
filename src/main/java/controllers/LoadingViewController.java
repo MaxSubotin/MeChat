@@ -7,9 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import util.Message;
@@ -99,7 +97,7 @@ public class LoadingViewController {
                                         }
                                     }
                                 });
-                            } else if (text.contains("USERNAME//DELETED//")) {
+                            } else if (text.contains("USERNAME//DELETED//") || text.contains("CHAT//DELETED//")) {
                                 Platform.runLater(() -> {
                                     // Find and save the chat we need to delete from the current user
                                     Pane chatToDelete = null;
@@ -121,6 +119,12 @@ public class LoadingViewController {
                                             MVCR.selectedChatBoxPane = null;
                                         }
                                     }
+
+                                    if (text.contains("USERNAME//DELETED//"))
+                                        showAlertWithMessage(Alert.AlertType.INFORMATION, "A user deleted his account", receivedMessage.getText().split("//")[2] + " has deleted his account and is no longer available.");
+                                    else
+                                        showAlertWithMessage(Alert.AlertType.INFORMATION, "A user deleted his chat with you", Database.getUsernameById(receivedMessage.getSender()) + " has deleted his chat with you.");
+
                                 });
                             } else if (text.contains("NEW//CHAT//CREATED//")) { // This case is not yet implemented
                                 Platform.runLater(() -> {
@@ -223,12 +227,15 @@ public class LoadingViewController {
                 chatBoxPane.setId(Database.compareStrings(regularChat.getSender(), regularChat.getReceiver()) + "_" + regularChat.getConversation_id());
                 chatBoxPane.setCursor(Cursor.HAND);
 
+
+
                 User receiver = Database.getUserByUserId(regularChat.getReceiver());
                 if (receiver != null) {
                     ChatBoxController controller = fxmlLoader.getController();
                     controller.setMainViewControllerReference(MVCR);
                     controller.setNameLabel(receiver.getName());
                     controller.setUserImage(receiver.getUserImage());
+                    controller.setContextMenu();
 
                     regularChat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
                     if (regularChat.getMessages() != null) {

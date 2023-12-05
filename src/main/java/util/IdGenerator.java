@@ -6,7 +6,7 @@ import java.security.SecureRandom;
 
 public class IdGenerator {
     private static final int ID_LENGTH = 10; // Length of the user ID
-    private static final String CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
     public static String generateUniqueUserId() {
@@ -19,8 +19,14 @@ public class IdGenerator {
 
     private static String generateRandomString(int length) {
         StringBuilder randomString = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            int randomIndex = RANDOM.nextInt(CHARACTERS.length());
+
+        // Ensure the first character is a letter
+        int randomIndex = RANDOM.nextInt(CHARACTERS.length() - 10); // Exclude the last 10 characters (digits)
+        randomString.append(CHARACTERS.charAt(randomIndex));
+
+        // Generate the remaining characters
+        for (int i = 1; i < length; i++) {
+            randomIndex = RANDOM.nextInt(CHARACTERS.length());
             randomString.append(CHARACTERS.charAt(randomIndex));
         }
         return randomString.toString();
