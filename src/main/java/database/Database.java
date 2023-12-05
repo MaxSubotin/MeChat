@@ -55,24 +55,22 @@ public class Database {
             // Find all the conversations this user has in the database and for each one we will create a chat box
             pst1.setString(1, userId);
             pst1.setString(2, userId);
-            ResultSet rs = pst1.executeQuery();
 
-            while (rs.next()) {
-                if (Objects.equals(rs.getString("participant1"), userId))
+            try (ResultSet rs = pst1.executeQuery()) {
+                while (rs.next()) {
+                    String otherParticipant = rs.getString("participant1").equals(userId)
+                            ? rs.getString("participant2")
+                            : rs.getString("participant1");
+
                     usersRegularChats.add(new RegularChat(
                             null,
                             userId,
-                            rs.getString("participant2"),
-                            rs.getInt("conversation_id"))
-                    );
-                else
-                    usersRegularChats.add(new RegularChat(
-                            null,
-                            userId,
-                            rs.getString("participant1"),
-                            rs.getInt("conversation_id"))
-                    );
+                            otherParticipant,
+                            rs.getInt("conversation_id")
+                    ));
+                }
             }
+
 
         } catch (SQLException e) {
             catchBlockCode(e);
