@@ -269,7 +269,7 @@ public class MainViewController {
         setConnectedLabelOff();
     }
 
-    public void showAlertWithMessage(Alert.AlertType type, String title, String errorMessage) {
+    public static void showAlertWithMessage(Alert.AlertType type, String title, String errorMessage) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -296,6 +296,7 @@ public class MainViewController {
     public void setConnectedLabelOn() { connectedLabel.setText("connected"); }
 
     public void setConnectedLabelOff() { connectedLabel.setText("disconnected"); }
+    public void setConnectedLabelText(String text) { connectedLabel.setText(text); }
 
     public Scene getCurrentScene() { return profileButton.getScene();}
 

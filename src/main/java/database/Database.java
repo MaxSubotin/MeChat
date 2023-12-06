@@ -22,6 +22,8 @@ public class Database {
         String queryForUser = "SELECT * FROM users WHERE username = ?";
         User userFromDatabase = null;
 
+        //long startTime = System.currentTimeMillis(); // Record the start time
+
         try (Connection con = DatabaseConfig.getConnection();
              PreparedStatement pst1 = con.prepareStatement(queryForUser)) {
 
@@ -34,11 +36,15 @@ public class Database {
                 if (result.verified)
                     userFromDatabase = new User(rs.getString("username"), rs.getString("id"), rs.getString("image"));
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             showAlertWithMessage(Alert.AlertType.ERROR, "User Not Found", "User not found, please try again later.\nERROR #1");
             catchBlockCode(e); // User not found error is handled in the MainViewController file
         }
+//        finally {
+//            long endTime = System.currentTimeMillis(); // Record the end time
+//            long executionTime = endTime - startTime; // Calculate the execution time
+//            System.out.println("Method execution time: " + executionTime + " milliseconds");
+//        }
 
         return userFromDatabase;
     }
@@ -47,7 +53,9 @@ public class Database {
 
     public static ArrayList<RegularChat> getUsersChatsFromDatabase(String userId) {
         String queryForConversations = "SELECT * FROM conversations WHERE participant1 = ? OR participant2 = ?";
-        ArrayList<RegularChat> usersRegularChats = new ArrayList<RegularChat>();
+        ArrayList<RegularChat> usersRegularChats = new ArrayList<>();
+
+        //long startTime = System.currentTimeMillis(); // Record the start time
 
         try (Connection con = DatabaseConfig.getConnection();
              PreparedStatement pst1 = con.prepareStatement(queryForConversations)) {
@@ -71,15 +79,20 @@ public class Database {
                 }
             }
 
-
         } catch (SQLException e) {
             catchBlockCode(e);
             showAlertWithMessage(Alert.AlertType.ERROR, "Could not load user chats", "Could not load the user chats for user: " + userId + "\nERROR #2");
             usersRegularChats = null;
         }
+//        finally {
+//            long endTime = System.currentTimeMillis(); // Record the end time
+//            long executionTime = endTime - startTime; // Calculate the execution time
+//            System.out.println("Method execution time: " + executionTime + " milliseconds");
+//        }
 
         return usersRegularChats;
     }
+
 
     public static ArrayList<Message> getChatMessagesFromDatabase(String tableName) {
         String queryForConversations = "SELECT * FROM " + tableName;

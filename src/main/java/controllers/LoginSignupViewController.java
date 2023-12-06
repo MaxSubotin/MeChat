@@ -20,6 +20,7 @@ import javafx.stage.WindowEvent;
 import util.*;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
 public class LoginSignupViewController {
 
@@ -152,26 +153,19 @@ public class LoginSignupViewController {
         return scene;
     }
 
-    private void handleUserLogin() {
+    private void handleUserAction(Supplier<User> actionSupplier, boolean isLogin, String errorMessage) {
         Scene mainScene = loadMainView();
 
-        // Setting up code for the JavaFX Thread:
         Platform.runLater(() -> {
-            // Create a Task obj that will perform the task of loading user data from the database and establish a connection to the server
             Task<User> task = new Task<>() {
                 @Override
                 protected User call() {
                     try {
-                        // Fetch user data from the database
-                        User user = Database.getUserFromDatabase(loginUsernameField.getText(), loginPasswordField.getText());
-                        if (user == null) return null;
-                        LVCR.user = user;
-                        if (!LVCR.loadUserData()) { // loads all the user chats (if exists) and creating a new websocket connection
-                            closeConnectionIfOpen(); // if something went wrong we close the connection if open
-                            return null;
-                        }
-
-                        return user;
+                        // actionSupplier is basically a way to pass a function into another function in Java.
+                        // the actionSupplier in my case holds a function of the code that needs to run in the task, and that code is modular
+                        // and different for login and signup, therefore user the supplier in this case is the right thing to do because it allows
+                        // the task to perform any function I pass it.
+                        return actionSupplier.get();
                     } catch (Exception e) {
                         e.printStackTrace();
                         return null;
@@ -179,82 +173,61 @@ public class LoginSignupViewController {
                 }
             };
 
-            task.setOnSucceeded(event -> {
-                // Update the UI after the background task is complete
-                Platform.runLater(() -> {
-                    User myUser = task.getValue(); // Retrieve the result from the task
+            task.setOnSucceeded(event -> Platform.runLater(() -> {
+                User myUser = task.getValue();
 
-                    if (myUser != null) {
-                        MVCR.MyUser = myUser;
-                        MVCR.webSocketClient = LVCR.webSocketClient;
+                if (myUser != null) {
+                    MVCR.MyUser = myUser;
+                    MVCR.webSocketClient = LVCR.webSocketClient;
 
+                    if (isLogin) {
                         cleanLoginForm();
-                        showMainView(mainScene);
                     } else {
-                        primaryStage.setScene(loadLoginAndSignupView());
-                        showAlertWithMessage(Alert.AlertType.ERROR,"Login Error","Login failed. User credentials are incorrect.");
+                        cleanSignupForm();
                     }
-                });
-            });
 
-            // Start the background task
+                    showMainView(mainScene);
+                } else {
+                    primaryStage.setScene(loadLoginAndSignupView());
+                    showAlertWithMessage(Alert.AlertType.ERROR, errorMessage, errorMessage);
+                }
+            }));
+
             new Thread(task).start();
         });
     }
 
+    private void handleUserLogin() {
+        handleUserAction(() -> {
+            User user = Database.getUserFromDatabase(loginUsernameField.getText(), loginPasswordField.getText());
+            if (user == null) return null;
+
+            LVCR.user = user;
+            if (!LVCR.loadUserData()) {
+                closeConnectionIfOpen();
+                return null;
+            }
+
+            return user;
+        }, true, "Login failed. User credentials are incorrect.");
+    }
 
     private void handleUserSignup(String hashedPassword, String userImageName) {
+        handleUserAction(() -> {
+            String userId = IdGenerator.generateUniqueUserId();
+            User user = new User(signupUsernameField.getText(), userId, userImageName);
 
-        Scene mainScene = loadMainView();
-
-        // Setting up code for the JavaFX Thread:
-        Platform.runLater(() -> {
-            // Create a Task obj that will perform the task of loading user data from the database and establish a connection to the server
-            Task<User> task = new Task<>() {
-                @Override
-                protected User call() {
-                    try {
-                        // Create a new user
-                        String userId = IdGenerator.generateUniqueUserId(); // Generate a unique user id
-                        User user = new User(signupUsernameField.getText(), userId, userImageName);
-
-                        if (Database.addUserToDatabase(user.getName(), hashedPassword, user.getId(), user.getUserImageWithoutSuffix())) {
-                            LVCR.user = user;
-                            if (!LVCR.loadUserData()) { // loads all the user chats (if exists) and creating a new websocket connection
-                                closeConnectionIfOpen(); // if something when wrong we close the connection if open
-                                return null;
-                            }
-                        }
-                        return user;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+            if (Database.addUserToDatabase(user.getName(), hashedPassword, user.getId(), user.getUserImageWithoutSuffix())) {
+                LVCR.user = user;
+                if (!LVCR.loadUserData()) {
+                    closeConnectionIfOpen();
                     return null;
                 }
-            };
-
-            task.setOnSucceeded(event -> {
-                // Update the UI after the background task is complete
-                Platform.runLater(() -> {
-                    User myUser = task.getValue(); // Retrieve the result from the task
-
-                    if (myUser != null) {
-                        MVCR.MyUser = myUser;
-                        MVCR.webSocketClient = LVCR.webSocketClient;
-
-                        cleanSignupForm();
-                        showMainView(mainScene);
-                    } else {
-                        primaryStage.setScene(loadLoginAndSignupView());
-                        showAlertWithMessage(Alert.AlertType.ERROR,"Signup Error","Signup failed. Unable to generate a new user.");
-                    }
-                });
-            });
-
-            // Start the background task
-            new Thread(task).start();
-        });
+            }
+            return user;
+        }, false, "Signup failed. Unable to generate a new user.");
     }
+
 
     private void cleanSignupForm() {
         signupUsernameField.clear();

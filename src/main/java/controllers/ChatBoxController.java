@@ -34,6 +34,13 @@ public class ChatBoxController {
 
     private MainViewController mainViewControllerReference;
 
+    public void initChatBox(String name, String id, MainViewController mcvr) {
+        setNameLabel(name);
+        setUserImage(Database.getUserImageById(id));
+        setMainViewControllerReference(mcvr);
+        setContextMenu();
+    }
+
     @FXML
     public void chatBoxOnClick(MouseEvent event) {
         // Removing old border
