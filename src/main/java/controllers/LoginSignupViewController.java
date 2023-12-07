@@ -20,6 +20,7 @@ import javafx.stage.WindowEvent;
 import util.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 public class LoginSignupViewController {
@@ -199,7 +200,9 @@ public class LoginSignupViewController {
 
     private void handleUserLogin() {
         handleUserAction(() -> {
-            User user = Database.getUserFromDatabase(loginUsernameField.getText(), loginPasswordField.getText());
+            char[] userPassword = loginPasswordField.getText().toCharArray();
+            User user = Database.getUserFromDatabase(loginUsernameField.getText(), userPassword);
+            Arrays.fill(userPassword, '\0'); // Zeroing out the password in memory for user safety
             if (user == null) return null;
 
             LVCR.user = user;

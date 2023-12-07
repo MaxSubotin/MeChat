@@ -9,6 +9,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,8 +18,7 @@ import java.util.logging.Logger;
 
 public class Database {
 
-
-    public static User getUserFromDatabase(String userUsername, String userPassword) {
+    public static User getUserFromDatabase(String userUsername, char[] userPassword) {
         String queryForUser = "SELECT * FROM users WHERE username = ?";
         User userFromDatabase = null;
 
@@ -32,7 +32,7 @@ public class Database {
             ResultSet rs = pst1.executeQuery();
 
             if (rs.next()) {
-                BCrypt.Result result = BCrypt.verifyer().verify(userPassword.toCharArray(), rs.getString("password"));
+                BCrypt.Result result = BCrypt.verifyer().verify(userPassword, rs.getString("password"));
                 if (result.verified)
                     userFromDatabase = new User(rs.getString("username"), rs.getString("id"), rs.getString("image"));
             }
