@@ -176,11 +176,7 @@ public class CustomWebSocketServer extends WebSocketServer {
 
   public static void main(String[] args) throws InterruptedException, IOException {
     int port = 8888; // 843 flash policy port
-    try {
-      port = Integer.parseInt(args[0]);
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
+
     CustomWebSocketServer s = new CustomWebSocketServer(port, new Draft_6455());
     s.start();
     System.out.println("ChatServer started on port: " + s.getPort());
