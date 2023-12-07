@@ -2,15 +2,15 @@ package database;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import util.User;
 
+import util.User;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
 class DatabaseTest {
-    //@DisplayName("Test getUserFromDatabase #1:")
+    @DisplayName("Test getUserFromDatabase #1:")
     @Test
     public void getUserFromDatabaseTest1() {
 
@@ -27,9 +27,6 @@ class DatabaseTest {
         assertEquals("Max", resultUser.getName(),"Expected username does not match");
         assertEquals("NWPwiUdn7B", resultUser.getId(), "Expected user id does not match");
         assertEquals("male", resultUser.getUserImageWithoutSuffix(), "Expected user image does not match");
-
-        // ... other assertions ...
-
     }
 
 }
