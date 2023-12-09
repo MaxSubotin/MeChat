@@ -7,7 +7,6 @@ module app.mechat {
     requires com.zaxxer.hikari;
     requires bcrypt;
 
-
     exports controllers;
     opens controllers to javafx.fxml;
     exports database;

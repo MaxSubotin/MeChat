@@ -1,16 +1,11 @@
 package controllers;
 
 import database.Database;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import util.Message;
 import util.RegularChat;
 import util.User;
 import websockets.CustomWebSocketClient;
@@ -19,13 +14,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.UUID;
 
 public class LoadingViewController {
 
     public User user;
-    public CustomWebSocketClient webSocketClient;
     public MainViewController MVCR = null; // short for mainViewControllerReference
     private final String URI_Address = "ws://localhost:8888/socket?session=";
 
@@ -60,17 +53,17 @@ public class LoadingViewController {
     private boolean createWebsocketConnection(User user) {
         try { // Initialize the client web socket
             String session = UUID.randomUUID().toString(); // Generate a unique session or token
-            webSocketClient = new CustomWebSocketClient(new URI(URI_Address + session), user.getName(), MVCR.getCurrentScene(), MVCR);
+            MVCR.webSocketClient = new CustomWebSocketClient(new URI(URI_Address + session), user.getName(), MVCR.getCurrentScene(), MVCR);
 
             if (Database.getSessionByUserId(user.getId()) == null) {
                 if (Database.addSessionToDataBase(user.getId(), session)) // adding the connecting to the database to keep track of connected users
-                    webSocketClient.connect();
+                    MVCR.webSocketClient.connect();
                 else {
-                    webSocketClient.close();
+                    MVCR.webSocketClient.close();
                     return false;
                 }
             }
-            else webSocketClient.onError(new Exception());
+            else MVCR.webSocketClient.onError(new Exception());
 
         } catch (URISyntaxException ex) {
             showAlertWithMessage(Alert.AlertType.ERROR, "Error", "URISyntaxException, Not a valid WebSocket URI\n" + ex);

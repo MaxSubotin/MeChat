@@ -20,6 +20,7 @@ import javafx.stage.WindowEvent;
 import util.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 public class LoginSignupViewController {
@@ -27,7 +28,6 @@ public class LoginSignupViewController {
     private Stage primaryStage;
     private ImageView selectedUserImage = null;
     private HBox selectedAvatarHbox;
-    private MainViewController MVCR = null; // short for mainViewControllerReference
     private LoadingViewController LVCR = null; // short for loadingViewControllerReference
 
 
@@ -38,7 +38,7 @@ public class LoginSignupViewController {
     @FXML
     ImageView male_AvatarImage, female_AvatarImage;
     @FXML
-    AnchorPane rootNode;
+    AnchorPane loginAndSignupView;
 
 
     @FXML
@@ -129,9 +129,8 @@ public class LoginSignupViewController {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/mainView.fxml"));
             scene = new Scene(fxmlLoader.load(), 900, 600, Color.web("rgba(0, 0, 0, 0.75)"));
             MainViewController controller = fxmlLoader.getController();
-            MVCR = controller;
-            MVCR.getFocus();
-            MVCR.turnChatInvisible();
+            controller.getFocus();
+            controller.turnChatInvisible();
 
             LVCR.MVCR = controller; // later we call the loadUserData method that will call the addUsersChatsToScreen that needs a reference to the MVCR controller to work.
         } catch (IOException e){
@@ -155,17 +154,21 @@ public class LoginSignupViewController {
 
     private void handleUserAction(Supplier<User> actionSupplier, boolean isLogin, String errorMessage) {
         Scene mainScene = loadMainView();
+        if (mainScene == null) {
+            primaryStage.setScene(loadLoginAndSignupView());
+            return;
+        }
 
         Platform.runLater(() -> {
             Task<User> task = new Task<>() {
                 @Override
                 protected User call() {
                     try {
-                        // actionSupplier is basically a way to pass a function into another function in Java.
+                        return actionSupplier.get();
+                        // 🟡 actionSupplier is basically a way to pass a function into another function in Java.
                         // the actionSupplier in my case holds a function of the code that needs to run in the task, and that code is modular
                         // and different for login and signup, therefore user the supplier in this case is the right thing to do because it allows
                         // the task to perform any function I pass it.
-                        return actionSupplier.get();
                     } catch (Exception e) {
                         e.printStackTrace();
                         return null;
@@ -177,9 +180,6 @@ public class LoginSignupViewController {
                 User myUser = task.getValue();
 
                 if (myUser != null) {
-                    MVCR.MyUser = myUser;
-                    MVCR.webSocketClient = LVCR.webSocketClient;
-
                     if (isLogin) {
                         cleanLoginForm();
                     } else {
@@ -199,10 +199,13 @@ public class LoginSignupViewController {
 
     private void handleUserLogin() {
         handleUserAction(() -> {
-            User user = Database.getUserFromDatabase(loginUsernameField.getText(), loginPasswordField.getText());
+            char[] userPassword = loginPasswordField.getText().toCharArray();
+            User user = Database.getUserFromDatabase(loginUsernameField.getText(), userPassword);
+            Arrays.fill(userPassword, '\0'); // Zeroing out the password in memory for user safety
             if (user == null) return null;
 
-            LVCR.user = user;
+            addUserToControllers(user);
+
             if (!LVCR.loadUserData()) {
                 closeConnectionIfOpen();
                 return null;
@@ -218,7 +221,9 @@ public class LoginSignupViewController {
             User user = new User(signupUsernameField.getText(), userId, userImageName);
 
             if (Database.addUserToDatabase(user.getName(), hashedPassword, user.getId(), user.getUserImageWithoutSuffix())) {
-                LVCR.user = user;
+
+                addUserToControllers(user);
+
                 if (!LVCR.loadUserData()) {
                     closeConnectionIfOpen();
                     return null;
@@ -237,6 +242,11 @@ public class LoginSignupViewController {
     private void cleanLoginForm() {
         loginUsernameField.clear();
         loginPasswordField.clear();
+    }
+
+    private void addUserToControllers(User user) {
+        LVCR.user = user;
+        LVCR.MVCR.MyUser = user;
     }
 
     public void showAlertWithMessage(Alert.AlertType type, String title, String errorMessage) {
@@ -273,8 +283,8 @@ public class LoginSignupViewController {
     }
 
     public void closeConnectionIfOpen() {
-        if (LVCR.webSocketClient != null) {
-            LVCR.webSocketClient.close();
+        if (LVCR.MVCR.webSocketClient != null) {
+            LVCR.MVCR.webSocketClient.close();
         }
     }
 

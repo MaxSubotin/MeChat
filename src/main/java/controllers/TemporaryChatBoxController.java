@@ -11,20 +11,18 @@ import util.Message;
 import util.RegularChat;
 
 import java.io.IOException;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 
 public class TemporaryChatBoxController {
+
+    private MainViewController MVCR;
 
     @FXML
     TextField nameTextField;
     @FXML
     Button confirmButton, cancelButton;
 
-    private MainViewController mainViewControllerReference;
-
-    public String getNameTextField() {
-        return nameTextField.getText();
-    }
 
     @FXML
     public void confirmButtonOnClick() {
@@ -37,7 +35,7 @@ public class TemporaryChatBoxController {
             // Find the userId of the person we want to chat with
             String tempNameId = Database.getUserIdByUsername(tempName);
             if (tempNameId == null) {
-                mainViewControllerReference.showAlertWithMessage(Alert.AlertType.ERROR, "User not found", "Could not find a user with the name " + tempName + ", try a different one.");
+                MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "User not found", "Could not find a user with the name " + tempName + ", try a different one.");
                 return; // user was not found, do nothing.
             }
 
@@ -47,24 +45,37 @@ public class TemporaryChatBoxController {
 
             // Setting the name of the contact and an on-click event
             ChatBoxController controller = fxmlLoader.getController();
-            controller.initChatBox(tempName, tempNameId, mainViewControllerReference);
+            controller.initChatBox(tempName, tempNameId, MVCR);
 
             chatBoxPane.setOnMouseClicked(controller::chatBoxOnClick);
             chatBoxPane.setCursor(Cursor.HAND);
 
             // Removing the temporary chat box and adding the new one
             removeLastElement();
-            mainViewControllerReference.getHistoryVBox().getChildren().add(chatBoxPane);
+            MVCR.getHistoryVBox().getChildren().add(chatBoxPane);
 
             // Add the chat to the users database
-            int id = Database.addConversationToDatabase(mainViewControllerReference.MyUser.getId() ,tempNameId);
+            int id = Database.addConversationToDatabase(MVCR.MyUser.getId() ,tempNameId);
             if (id != -1) {
-                String conversationName = Database.compareStrings(mainViewControllerReference.MyUser.getId(), tempNameId) + "_" + id;
+                String conversationName = Database.compareStrings(MVCR.MyUser.getId(), tempNameId) + "_" + id;
                 chatBoxPane.setId(conversationName);
-                mainViewControllerReference.MyUser.addChatToUser(chatBoxPane, new RegularChat(new ArrayList<Message>(),conversationName.split("_")[0], conversationName.split("_")[1],id));
+
+                String otherParticipant = conversationName.split("_")[0].equals(MVCR.MyUser.getId())
+                        ? conversationName.split("_")[1]
+                        : conversationName.split("_")[0];
+
+                MVCR.MyUser.addChatToUser(
+                        chatBoxPane,
+                        new RegularChat(
+                                new ArrayList<Message>(),
+                                MVCR.MyUser.getId(),
+                                otherParticipant,
+                                id
+                        )
+                );
             } else {
                 removeLastElement();
-                mainViewControllerReference.showAlertWithMessage(Alert.AlertType.ERROR,"Error","Could not create the conversation.");
+                MainViewController.showAlertWithMessage(Alert.AlertType.ERROR,"Error","Could not create the conversation.");
             }
         }
         catch (IOException e) {
@@ -79,17 +90,21 @@ public class TemporaryChatBoxController {
 
 
     public void removeLastElement() {
-        int tempSize = mainViewControllerReference.getHistoryVBox().getChildren().size();
-        mainViewControllerReference.getHistoryVBox().getChildren().remove(tempSize-1);
-        mainViewControllerReference.setTemporaryChatBoxCounter(0); // Reducing the counter so that the user could add another chat later
-        mainViewControllerReference.getFocus();
+        int tempSize = MVCR.getHistoryVBox().getChildren().size();
+        MVCR.getHistoryVBox().getChildren().remove(tempSize-1);
+        MVCR.setTemporaryChatBoxCounter(0); // Reducing the counter so that the user could add another chat later
+        MVCR.getFocus();
     }
 
     // getters and setters
 
-    public void setMainViewControllerReference(MainViewController mainViewControllerReference) { this.mainViewControllerReference = mainViewControllerReference; }
+    public String getNameTextField() {
+        return nameTextField.getText();
+    }
+
+    public void setMainViewControllerReference(MainViewController mainViewControllerReference) { MVCR = mainViewControllerReference; }
 
     public MainViewController getMainViewControllerReference() {
-        return mainViewControllerReference;
+        return MVCR;
     }
 }

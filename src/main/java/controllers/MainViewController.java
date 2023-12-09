@@ -41,7 +41,7 @@ public class MainViewController {
     private HBox selectedAvatarHbox;
 
     @FXML
-    AnchorPane root;
+    AnchorPane mainView;
     @FXML
     ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, female_AvatarImage;
     @FXML
@@ -73,12 +73,12 @@ public class MainViewController {
         try {
             // Add the chat box to the screen
             FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/temporaryChatBoxComponent.fxml"));
-            Pane newChatBoxPane = fxmlLoader.load();
+            Pane temporaryChatBoxComponent = fxmlLoader.load();
             temporaryChatBoxCounter++;
 
             TemporaryChatBoxController controller = fxmlLoader.getController();
             controller.setMainViewControllerReference(this); // Giving a reference to the main controller for communication
-            historyVBox.getChildren().add(newChatBoxPane);
+            historyVBox.getChildren().add(temporaryChatBoxComponent);
             getFocus();
 
         } catch (IOException e) {
@@ -126,31 +126,34 @@ public class MainViewController {
         // Check new username with regex
         if (!RegexChecker.isValidUsername(newUsername)) {
             // Show and error message
-            showAlertWithMessage(Alert.AlertType.ERROR,"Error", "Your new username is not good enough.\nTry a different one.");
+            showAlertWithMessage(Alert.AlertType.ERROR,"Error", "Your new username, " + newUsername + " is not good enough.\nTry a different one.");
+            settingsUsernameField.clear();
             return;
         }
 
         // Check newUsername in database and update the database
         if (MyUser.setName(newUsername)) {
             webSocketClient.sendMessageToServer(MyUser, "USERNAME//CHANGED//" + newUsername);
-            settingsUsernameField.clear();
         } else {
             showAlertWithMessage(Alert.AlertType.ERROR,"Error", newUsername + " is already taken.\nTry a different username.");
         }
+
+        settingsUsernameField.clear();
     }
 
     @FXML
     public void settingsPasswordSaveButtonOnClick() {
         // Check new password with regex
         if (RegexChecker.isValidPassword(settingsPasswordField.getText())) {
-            if (!MyUser.updatePassword(BCrypt.withDefaults().hashToString(12, settingsPasswordField.getText().toCharArray())))
+            if (!MyUser.updatePassword(BCrypt.withDefaults().hashToString(12, settingsPasswordField.getText().toCharArray()))) {
+                settingsPasswordField.clear();
                 return;
-            settingsPasswordField.clear();
+            }
         } else {
             // Show and error message
             showAlertWithMessage(Alert.AlertType.ERROR,"Error", "Your new password is not good enough.\nTry a different one.");
         }
-
+        settingsPasswordField.clear();
     }
 
     @FXML
@@ -171,7 +174,7 @@ public class MainViewController {
             else
                 System.out.println("Could not properly delete your user from the database, please try again later.");
 
-            closeChatAppWindow();
+            logoutButtonOnClick();
         }
     }
 
@@ -203,12 +206,11 @@ public class MainViewController {
             Scene scene = new Scene(fxmlLoader.load(), 900, 600, Color.web("rgba(0, 0, 0, 0.75)"));
             LoginSignupViewController controller = fxmlLoader.getController();
 
-            Stage currentStage = (Stage) root.getScene().getWindow();
+            Stage currentStage = (Stage) mainView.getScene().getWindow();
             controller.setPrimaryStage(currentStage);
             currentStage.setScene(scene);
 
             webSocketClient.close();
-            MyUser = null;
 
         } catch (IOException e) {
             e.printStackTrace();
