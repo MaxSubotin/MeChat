@@ -82,7 +82,7 @@ public class CustomWebSocketServer extends WebSocketServer {
 
             // Send the json system message
             onMessage(conn,jsonMessage);
-            System.out.println(userId + " has entered the room!");
+            System.out.println(userId + " has entered the app!");
         } else {
             // Invalid session token, reject the WebSocket connection
             System.out.println("ERROR!");
@@ -114,7 +114,7 @@ public class CustomWebSocketServer extends WebSocketServer {
             if (!Database.removeUserSession(userId))
                 System.out.println("Could not complete the user session removal form the database. Error in onClose Override function in CustomWebSocketServer.");
 
-            System.out.println(userId + " has left the room!");
+            System.out.println(userId + " has quit the app!");
         }
     }
 

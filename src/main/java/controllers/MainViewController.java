@@ -73,12 +73,12 @@ public class MainViewController {
         try {
             // Add the chat box to the screen
             FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/temporaryChatBoxComponent.fxml"));
-            Pane newChatBoxPane = fxmlLoader.load();
+            Pane temporaryChatBoxComponent = fxmlLoader.load();
             temporaryChatBoxCounter++;
 
             TemporaryChatBoxController controller = fxmlLoader.getController();
             controller.setMainViewControllerReference(this); // Giving a reference to the main controller for communication
-            historyVBox.getChildren().add(newChatBoxPane);
+            historyVBox.getChildren().add(temporaryChatBoxComponent);
             getFocus();
 
         } catch (IOException e) {
@@ -208,9 +208,6 @@ public class MainViewController {
             currentStage.setScene(scene);
 
             webSocketClient.close();
-            //MyUser = null;
-
-            System.out.println("Logged out:");
 
         } catch (IOException e) {
             e.printStackTrace();

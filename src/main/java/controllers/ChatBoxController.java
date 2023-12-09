@@ -32,7 +32,7 @@ public class ChatBoxController {
     @FXML
     ImageView userImage;
 
-    private MainViewController mainViewControllerReference;
+    private MainViewController MVCR;
 
     public void initChatBox(String name, String id, MainViewController mcvr) {
         setNameLabel(name);
@@ -44,36 +44,36 @@ public class ChatBoxController {
     @FXML
     public void chatBoxOnClick(MouseEvent event) {
         // Removing old border
-        Pane oldChatBox = mainViewControllerReference.getSelectedChatBoxPane();
+        Pane oldChatBox = MVCR.getSelectedChatBoxPane();
         if (oldChatBox != null) {
             oldChatBox.getStyleClass().remove("chatPaneClicked");
-            mainViewControllerReference.cleanChatBubbles();
+            MVCR.cleanChatBubbles();
         }
 
         // Creating and adding new border to the selected chat
         Pane newChatBox = (Pane) event.getSource();
         newChatBox.getStyleClass().add("chatPaneClicked");
-        mainViewControllerReference.setSelectedChatBoxPane(newChatBox);
+        MVCR.setSelectedChatBoxPane(newChatBox);
 
         // Getting the Chat object based on the selected Pane
-        mainViewControllerReference.currentRegularChat = mainViewControllerReference.MyUser.getUserChats().get(newChatBox);
+        MVCR.currentRegularChat = MVCR.MyUser.getUserChats().get(newChatBox);
 
         // Set receiver name label
-        mainViewControllerReference.setSelectedChatBoxUserId(mainViewControllerReference.currentRegularChat.getReceiver());
+        MVCR.setSelectedChatBoxUserId(MVCR.currentRegularChat.getReceiver());
 
         // Check if the other person is connected or disconnected
-        if (Database.isUserConnected(mainViewControllerReference.currentRegularChat.getReceiver()))
-            mainViewControllerReference.setConnectedLabelOn();
-        else
-            mainViewControllerReference.setConnectedLabelOff();
+        if (Database.isUserConnected(MVCR.currentRegularChat.getReceiver())) { // 🔴 cant use receiver because sometimes it the current user itself and sometimes it the other person
+            MVCR.setConnectedLabelOn();
+        } else
+            MVCR.setConnectedLabelOff();
 
         // Adding a listener to scroll down whenever there is a new message or messages are loaded (or just any change to the vbox)
-        mainViewControllerReference.chatVBox.heightProperty().addListener(
-            (ChangeListener) (observable, oldvalue, newValue) -> mainViewControllerReference.chatScrollPane.setVvalue(1.0));
+        MVCR.chatVBox.heightProperty().addListener(
+            (ChangeListener) (observable, oldvalue, newValue) -> MVCR.chatScrollPane.setVvalue(1.0));
 
         // Adding the chat name to the screen and making it visible
-        mainViewControllerReference.setChatNameLabel(nameLabel.getText());
-        mainViewControllerReference.turnChatVisible();
+        MVCR.setChatNameLabel(nameLabel.getText());
+        MVCR.turnChatVisible();
 
         // Loading the messages
         addMessageBubbles();
@@ -82,8 +82,8 @@ public class ChatBoxController {
 
     public void addMessageBubbles() {
         // The id of the chat box pane on the left side is the same as the name of the table that the messages are stored in the database: sender_receiver_conversationId
-        //ArrayList<Message> listOfMessages = Database.getChatMessagesFromDatabase(mainViewControllerReference.getSelectedChatBoxPane().getId());
-        ArrayList<Message> listOfMessages = mainViewControllerReference.currentRegularChat.getMessages();
+        //ArrayList<Message> listOfMessages = Database.getChatMessagesFromDatabase(MVCR.getSelectedChatBoxPane().getId());
+        ArrayList<Message> listOfMessages = MVCR.currentRegularChat.getMessages();
 
         try {
             // For each message in the chat we make a new bubble and add the text into it
@@ -95,11 +95,11 @@ public class ChatBoxController {
                 controller.setMessage(message);
 
                 // If the message was from the current user then we make it blue and positioned on the right side
-                if (Objects.equals(message.getSender(), mainViewControllerReference.MyUser.getId())) {
+                if (Objects.equals(message.getSender(), MVCR.MyUser.getId())) {
                     controller.setMessageBubbleLabelColorBlue();
                     chatBubblePane.setAlignment(Pos.CENTER_RIGHT);
                 }
-                mainViewControllerReference.getChatVBox().getChildren().add(chatBubblePane);
+                MVCR.getChatVBox().getChildren().add(chatBubblePane);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -113,7 +113,7 @@ public class ChatBoxController {
 
 
     public void setMainViewControllerReference(MainViewController mainViewControllerReference) {
-        this.mainViewControllerReference = mainViewControllerReference;
+        this.MVCR = mainViewControllerReference;
     }
 
 
@@ -142,17 +142,17 @@ public class ChatBoxController {
 
             // Add an action event handler for the "Delete" menu item
             deleteItem.setOnAction(event -> {
-                System.out.println("Delete button clicked! Deleting conversation #" + mainViewControllerReference.currentRegularChat.getConversation_id());
+                System.out.println("Delete button clicked! Deleting conversation #" + MVCR.currentRegularChat.getConversation_id());
 
-                if (Database.deleteRegularChat(mainViewControllerReference.currentRegularChat)) {
+                if (Database.deleteRegularChat(MVCR.currentRegularChat)) {
                     try {
-                        mainViewControllerReference.MyUser.getUserChats().remove(chatBoxPane);
-                        mainViewControllerReference.getHistoryVBox().getChildren().remove(chatBoxPane);
+                        MVCR.MyUser.getUserChats().remove(chatBoxPane);
+                        MVCR.getHistoryVBox().getChildren().remove(chatBoxPane);
 
-                        mainViewControllerReference.cleanChatBubbles();
-                        mainViewControllerReference.connectedLabel.setText("");
+                        MVCR.cleanChatBubbles();
+                        MVCR.connectedLabel.setText("");
 
-                        mainViewControllerReference.webSocketClient.sendMessageToServer(mainViewControllerReference.MyUser, "CHAT//DELETED//");
+                        MVCR.webSocketClient.sendMessageToServer(MVCR.MyUser, "CHAT//DELETED//");
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
