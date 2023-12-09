@@ -41,7 +41,7 @@ public class MainViewController {
     private HBox selectedAvatarHbox;
 
     @FXML
-    AnchorPane root;
+    AnchorPane mainView;
     @FXML
     ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, female_AvatarImage;
     @FXML
@@ -203,12 +203,14 @@ public class MainViewController {
             Scene scene = new Scene(fxmlLoader.load(), 900, 600, Color.web("rgba(0, 0, 0, 0.75)"));
             LoginSignupViewController controller = fxmlLoader.getController();
 
-            Stage currentStage = (Stage) root.getScene().getWindow();
+            Stage currentStage = (Stage) mainView.getScene().getWindow();
             controller.setPrimaryStage(currentStage);
             currentStage.setScene(scene);
 
             webSocketClient.close();
-            MyUser = null;
+            //MyUser = null;
+
+            System.out.println("Logged out:");
 
         } catch (IOException e) {
             e.printStackTrace();

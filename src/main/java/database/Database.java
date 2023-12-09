@@ -449,7 +449,6 @@ public class Database {
             if (rs.next()) {
                 int count = rs.getInt("count");
                 if (count > 0) {
-                    System.out.println("in here");
                     usernameUnique = false;
                 }
             }

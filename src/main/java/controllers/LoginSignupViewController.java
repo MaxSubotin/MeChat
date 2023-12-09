@@ -206,6 +206,8 @@ public class LoginSignupViewController {
             if (user == null) return null;
 
             LVCR.user = user;
+            LVCR.MVCR.MyUser = user;
+
             if (!LVCR.loadUserData()) {
                 closeConnectionIfOpen();
                 return null;
