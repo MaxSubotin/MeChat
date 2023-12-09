@@ -38,7 +38,7 @@ public class LoginSignupViewController {
     @FXML
     ImageView male_AvatarImage, female_AvatarImage;
     @FXML
-    AnchorPane rootNode;
+    AnchorPane loginAndSignupView;
 
 
     @FXML
