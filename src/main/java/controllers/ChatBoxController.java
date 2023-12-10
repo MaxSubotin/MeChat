@@ -62,7 +62,7 @@ public class ChatBoxController {
         MVCR.setSelectedChatBoxUserId(MVCR.currentRegularChat.getReceiver());
 
         // Check if the other person is connected or disconnected
-        if (Database.isUserConnected(MVCR.currentRegularChat.getReceiver())) { // 🔴 cant use receiver because sometimes it the current user itself and sometimes it the other person
+        if (Database.isUserConnected(MVCR.currentRegularChat.getReceiver())) {
             MVCR.setConnectedLabelOn();
         } else
             MVCR.setConnectedLabelOff();
@@ -91,14 +91,21 @@ public class ChatBoxController {
                 FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBubbleComponent.fxml"));
                 HBox chatBubblePane = fxmlLoader.load();
                 ChatBubbleController controller = fxmlLoader.getController();
-                controller.setMessageBubbleLabel(message.getText());
-                controller.setMessage(message);
+
 
                 // If the message was from the current user then we make it blue and positioned on the right side
                 if (Objects.equals(message.getSender(), MVCR.MyUser.getId())) {
+                    controller.initMessageBubble(message, MVCR, true);
                     controller.setMessageBubbleLabelColorBlue();
                     chatBubblePane.setAlignment(Pos.CENTER_RIGHT);
+                } else
+                    controller.initMessageBubble(message, MVCR, false);
+
+
+                if (Objects.equals(message.getText(), "--< this message was deleted >--")) {
+                    controller.setMessageBubbleLabelDeleted();
                 }
+
                 MVCR.getChatVBox().getChildren().add(chatBubblePane);
             }
         } catch (IOException e) {

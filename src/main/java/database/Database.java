@@ -562,6 +562,32 @@ public class Database {
         return true;
     }
 
+    public static boolean deleteMessageBubble(Message message) {
+        // Find out in what table does the message sit in the database
+        String tableName = compareStrings(message.getSender(),message.getReceiver()) + "_" + message.getConversation_id();
+
+        // Find the message in the database using the Text and Timestamp and Change the text of the message in the database to: --< this message was deleted >--
+        String updateQuery = "UPDATE " + tableName + " SET message_text = ? WHERE timestamp = ? AND message_text = ?";
+
+        try (Connection con = DatabaseConfig.getConnection();
+             PreparedStatement pst1 = con.prepareStatement(updateQuery)) {
+
+            Timestamp timestamp = Timestamp.valueOf(message.getTimestamp());
+
+            pst1.setString(1, "--< this message was deleted >--");
+            pst1.setTimestamp(2, timestamp);
+            pst1.setString(3, message.getText());
+            pst1.executeUpdate();
+
+        } catch (SQLException e) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not delete message", "Error in deleting a message from the database, try again later.\nERROR #26");
+            catchBlockCode(e);
+            return false;
+        }
+
+        return true;
+    }
+
     private static ArrayList<String> findAllChats(Connection con, String userId) {
         ArrayList<String> list = new ArrayList<String>();
         String query = "SELECT * FROM conversations WHERE participant1 = ? OR participant2 = ?";
