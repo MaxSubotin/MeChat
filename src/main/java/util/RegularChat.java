@@ -6,6 +6,7 @@ import websockets.CustomWebSocketClient;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class RegularChat implements ChatMethods {
 
@@ -53,6 +54,17 @@ public class RegularChat implements ChatMethods {
         }
 
         return true;
+    }
+
+    public boolean handleMessageDeleted(String text, String timestamp) {
+        for (Message message: messages) {
+            if (Objects.equals(message.getText(), text) &&
+                    Objects.equals(message.getTimestamp(), timestamp)) {
+                message.setText("--< this message was deleted >--");
+                return true;
+            }
+        }
+        return false;
     }
 
     // getters and setters

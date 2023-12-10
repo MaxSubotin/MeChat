@@ -24,6 +24,7 @@ import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Objects;
 
 public class CustomWebSocketClient extends WebSocketClient {
@@ -122,6 +123,39 @@ public class CustomWebSocketClient extends WebSocketClient {
                             MainViewController.showAlertWithMessage(Alert.AlertType.INFORMATION, "A user deleted his chat with you", Database.getUsernameById(receivedMessage.getSender()) + " has deleted his chat with you.");
 
                     });
+                } else if (text.contains("MESSAGE//DELETED//")) {
+
+                    if (Objects.equals(MVCR.selectedChatBoxUserId, receivedMessage.getSender())) {
+                        Platform.runLater(() -> {
+
+                            //deconstruct the message that was deleted: message comes like so: "MESSAGE//DELETED//this is the message//timestamp
+                            String receivedMessageText = receivedMessage.getText().split("//")[2];
+                            String receivedMessageTimestamp = receivedMessage.getText().split("//")[3];
+
+                            for (Node node: MVCR.getChatVBox().getChildren()) {
+
+                                if (node instanceof HBox) {
+                                    List<Node> HBoxChildren = ((HBox)node).getChildren();
+                                    Label messageText = (Label)HBoxChildren.get(1);
+                                    Label leftMessageTimestamp = (Label)HBoxChildren.get(0);
+                                    Label rightMessageTimestamp = (Label)HBoxChildren.get(2);
+
+                                    if (Objects.equals(messageText.getText(), receivedMessageText) &&
+                                        ( Objects.equals(leftMessageTimestamp.getText(), receivedMessageTimestamp) ||
+                                            Objects.equals(rightMessageTimestamp.getText(), receivedMessageTimestamp) )) {
+                                        System.out.println("4");
+
+                                        messageText.setText("--< this message was deleted >--");
+                                        node.setStyle("-fx-background-color: gray; -fx-background-radius: 10px; -fx-text-fill: whitesmoke;");
+
+                                        if (!MVCR.MyUser.userChats.get(MVCR.selectedChatBoxPane).handleMessageDeleted(receivedMessageText, receivedMessageTimestamp))
+                                            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Error in deleting a message", "Could not delete the message on the user side, please reload the application.");
+                                    }
+                                }
+                            }
+                        });
+                    }
+
                 } else if (text.contains("NEW//CHAT//CREATED//")) { // This case is not yet implemented
                     Platform.runLater(() -> {
 //                        String currentChat = MVCR.selectedChatBoxPane.getId();
@@ -150,9 +184,10 @@ public class CustomWebSocketClient extends WebSocketClient {
                         HBox chatBubble = fxmlLoader.load();
 
                         ChatBubbleController controller = fxmlLoader.getController();
-                        controller.setMessageBubbleLabel(receivedMessage.getText());
-                        controller.setMessage(receivedMessage);
-
+                        if (Objects.equals(MVCR.MyUser.getId(),receivedMessage.getSender()))
+                            controller.initMessageBubble(receivedMessage, MVCR, true);
+                        else
+                            controller.initMessageBubble(receivedMessage, MVCR, false);
 
                         if (Objects.equals(receivedMessage.getSender(), MVCR.MyUser.getId())) {
                             controller.setMessageBubbleLabelColorBlue();

@@ -178,6 +178,100 @@ public class EndToEndTest extends ApplicationTest {
 
     @Test
     @Order(5)
+    @DisplayName("Test Delete a Message:")
+    public void testDeleteMessageScenario() { // trying to log into a deleted account
+        loginProcess("Test1", "Test1");
+
+        // Wait for the main scene to be displayed using awaitility
+        Awaitility.await().until(() -> primaryStage.getScene().lookup("#mainView") != null);
+
+        assertFalse(verifyErrorPopUp());
+        verifyThat("#mainView", isVisible());
+
+        // Lookup the VBox with id "HistoryVBox"
+        VBox historyVBox = lookup("#historyVBox").query();
+        assertNotNull(historyVBox, "Could not find the historyVBox.");
+
+        Node firstChat = historyVBox.getChildren().get(0);
+        clickOn(firstChat);
+
+        VBox chatVBox = lookup("#chatVBox").query();
+        assertNotNull(chatVBox, "Could not find the historyVBox.");
+
+        if (!chatVBox.getChildren().isEmpty()) {
+            Node lastChild = chatVBox.getChildren().get(chatVBox.getChildren().size() - 1);
+            if (lastChild instanceof HBox) {
+                rightClickOn(lastChild);
+                clickOn("#contextMenuDeleteButton");
+
+                assertEquals("--< this message was deleted >--",
+                        ((Label) ((HBox) lastChild).getChildren().get(1)).getText().trim()
+                );
+            }
+        }
+
+        assertFalse(verifyErrorPopUp());
+
+        logoutProcess();
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("Test View Delete a Message:")
+    public void testViewDeleteMessageScenario() { // trying to log into a deleted account
+        loginProcess("Max", "123");
+
+        // Wait for the main scene to be displayed using awaitility
+        Awaitility.await().until(() -> primaryStage.getScene().lookup("#mainView") != null);
+
+        assertFalse(verifyErrorPopUp());
+        verifyThat("#mainView", isVisible());
+
+        // Lookup the VBox with id "HistoryVBox"
+        VBox historyVBox = lookup("#historyVBox").query();
+        assertNotNull(historyVBox, "Could not find the historyVBox.");
+
+        for (Node node : historyVBox.getChildren()) {
+            if (node instanceof Pane) {
+                Pane chatPane = (Pane) node;
+                if (chatPane.getChildren().size() == 1 && chatPane.getChildren().get(0) instanceof HBox) {
+                    HBox chatHBox = (HBox) chatPane.getChildren().get(0);
+                    List<Node> chatChildren = chatHBox.getChildren();
+
+                    // Assuming the ImageView is the first child and Label is the second child
+                    if (chatChildren.size() == 2 && chatChildren.get(1) instanceof Label) {
+                        Label chatLabel = (Label) chatChildren.get(1);
+                        String labelText = chatLabel.getText();
+
+                        if ("Test1".equals(labelText)) {
+                            // Found the correct node, click on and check to see if the message made it
+                            clickOn(chatLabel);
+
+                            VBox chatVBox = lookup("#chatVBox").query();
+                            assertNotNull(chatVBox, "Could not find the historyVBox.");
+
+                            if (!chatVBox.getChildren().isEmpty()) {
+                                Node lastChild = chatVBox.getChildren().get(chatVBox.getChildren().size() - 1);
+
+                                if (lastChild instanceof HBox) {
+                                    assertEquals("--< this message was deleted >--",
+                                            ((Label) ((HBox) lastChild).getChildren().get(1)).getText()
+                                    );
+                                }
+                            }
+
+                            break; // Assuming you want to stop after finding the correct node
+                        }
+                    }
+                }
+            }
+        }
+
+        logoutProcess();
+    }
+
+    @Test
+    @Order(7)
     @DisplayName("Test Change Username:")
     public void testChangeUsernameScenario() {
         loginProcess("Test1", "Test1");
@@ -206,8 +300,9 @@ public class EndToEndTest extends ApplicationTest {
         clickOn("#logoutButton");
     }
 
+
     @Test
-    @Order(6)
+    @Order(13)
     @DisplayName("Test Login Delete Account:")
     public void testLoginDeleteAccScenario() {
         loginProcess("tEST1", "Test1");
@@ -222,7 +317,7 @@ public class EndToEndTest extends ApplicationTest {
     }
 
     @Test
-    @Order(7)
+    @Order(14)
     @DisplayName("Test Login Unsuccessful:")
     public void testLoginUnsuccessfulScenario() { // trying to log into a deleted account
         loginProcess("tEST1", "Test1");
@@ -234,6 +329,9 @@ public class EndToEndTest extends ApplicationTest {
         verifyThat("#loginAndSignupView", isVisible());
     }
 
+
+
+    // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 //
 
     private void loginProcess(String username, String password) {
         clickOn("#loginUsernameField").write(username);
