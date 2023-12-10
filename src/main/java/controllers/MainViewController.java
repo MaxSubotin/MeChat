@@ -3,6 +3,7 @@ package controllers;
 import database.Database;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -269,6 +270,44 @@ public class MainViewController {
         chatVBox.getChildren().clear();
         setChatNameLabel("");
         setConnectedLabelOff();
+    }
+
+    public Pane createChatBoxPaneComponent(String receiverName, String receiverId) {
+        try {
+            // Create the conversation chat box
+            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
+            Pane chatBoxPane = fxmlLoader.load();
+
+            // Setting the name of the contact and an on-click event
+            ChatBoxController controller = fxmlLoader.getController();
+            controller.initChatBox(receiverName, receiverId, this);
+
+            chatBoxPane.setOnMouseClicked(controller::chatBoxOnClick);
+            chatBoxPane.setCursor(Cursor.HAND);
+            return chatBoxPane;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public void finalizeChatBoxComponentCreation(String receiverId, int conversationId, Pane chatBoxPane) {
+        String conversationName = Database.compareStrings(this.MyUser.getId(), receiverId) + "_" + conversationId;
+        chatBoxPane.setId(conversationName);
+
+        String otherParticipant = conversationName.split("_")[0].equals(this.MyUser.getId())
+                ? conversationName.split("_")[1]
+                : conversationName.split("_")[0];
+
+        this.MyUser.addChatToUser(
+                chatBoxPane,
+                new RegularChat(
+                        new ArrayList<Message>(),
+                        this.MyUser.getId(),
+                        otherParticipant,
+                        conversationId
+                )
+        );
     }
 
     public static void showAlertWithMessage(Alert.AlertType type, String title, String errorMessage) {

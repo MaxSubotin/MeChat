@@ -27,59 +27,37 @@ public class TemporaryChatBoxController {
     @FXML
     public void confirmButtonOnClick() {
         // Creating the actual chat box of the left side
-        try {
-            // Get the username of who we want to contact
-            String tempName = this.getNameTextField();
-            if (tempName.isEmpty()) return;
 
-            // Find the userId of the person we want to chat with
-            String tempNameId = Database.getUserIdByUsername(tempName);
-            if (tempNameId == null) {
-                MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "User not found", "Could not find a user with the name " + tempName + ", try a different one.");
-                return; // user was not found, do nothing.
-            }
+        // Get the username of who we want to contact
+        String tempName = this.getNameTextField();
+        if (tempName.isEmpty()) return;
 
-            // Create the conversation chat box
-            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
-            Pane chatBoxPane = fxmlLoader.load();
-
-            // Setting the name of the contact and an on-click event
-            ChatBoxController controller = fxmlLoader.getController();
-            controller.initChatBox(tempName, tempNameId, MVCR);
-
-            chatBoxPane.setOnMouseClicked(controller::chatBoxOnClick);
-            chatBoxPane.setCursor(Cursor.HAND);
-
-            // Removing the temporary chat box and adding the new one
-            removeLastElement();
-            MVCR.getHistoryVBox().getChildren().add(chatBoxPane);
-
-            // Add the chat to the users database
-            int id = Database.addConversationToDatabase(MVCR.MyUser.getId() ,tempNameId);
-            if (id != -1) {
-                String conversationName = Database.compareStrings(MVCR.MyUser.getId(), tempNameId) + "_" + id;
-                chatBoxPane.setId(conversationName);
-
-                String otherParticipant = conversationName.split("_")[0].equals(MVCR.MyUser.getId())
-                        ? conversationName.split("_")[1]
-                        : conversationName.split("_")[0];
-
-                MVCR.MyUser.addChatToUser(
-                        chatBoxPane,
-                        new RegularChat(
-                                new ArrayList<Message>(),
-                                MVCR.MyUser.getId(),
-                                otherParticipant,
-                                id
-                        )
-                );
-            } else {
-                removeLastElement();
-                MainViewController.showAlertWithMessage(Alert.AlertType.ERROR,"Error","Could not create the conversation.");
-            }
+        // Find the userId of the person we want to chat with
+        String tempNameId = Database.getUserIdByUsername(tempName);
+        if (tempNameId == null) {
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "User not found", "Could not find a user with the name " + tempName + ", try a different one.");
+            return; // user was not found, do nothing.
         }
-        catch (IOException e) {
-            throw new RuntimeException(e);
+
+        Pane chatBoxPane = MVCR.createChatBoxPaneComponent(tempName, tempNameId);
+        if (chatBoxPane == null) {
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Error in creating chat Pane", "Could not create chat Pane in the ui, try again later.");
+            return;
+        }
+
+        // Removing the temporary chat box and adding the new one
+        removeLastElement();
+        MVCR.getHistoryVBox().getChildren().add(chatBoxPane);
+
+        // Add the chat to the users database
+        int id = Database.addConversationToDatabase(MVCR.MyUser.getId() ,tempNameId);
+        if (id != -1) {
+
+            MVCR.finalizeChatBoxComponentCreation(tempNameId, id, chatBoxPane);
+            MVCR.webSocketClient.sendMessageToServer(MVCR.MyUser, "NEW//CHAT//CREATED//" + MVCR.MyUser.getName() + "//" + MVCR.MyUser.getId() + "//" + id);
+        } else {
+            removeLastElement();
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR,"Error","Could not create the conversation.");
         }
     }
 

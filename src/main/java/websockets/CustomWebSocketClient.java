@@ -18,6 +18,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import util.Message;
 import util.MessageAdapter;
+import util.RegularChat;
 import util.User;
 import com.google.gson.GsonBuilder;
 
@@ -124,10 +125,8 @@ public class CustomWebSocketClient extends WebSocketClient {
 
                     });
                 } else if (text.contains("MESSAGE//DELETED//")) {
-
                     if (Objects.equals(MVCR.selectedChatBoxUserId, receivedMessage.getSender())) {
                         Platform.runLater(() -> {
-
                             //deconstruct the message that was deleted: message comes like so: "MESSAGE//DELETED//this is the message//timestamp
                             String receivedMessageText = receivedMessage.getText().split("//")[2];
                             String receivedMessageTimestamp = receivedMessage.getText().split("//")[3];
@@ -155,19 +154,21 @@ public class CustomWebSocketClient extends WebSocketClient {
                             }
                         });
                     }
-
-                } else if (text.contains("NEW//CHAT//CREATED//")) { // This case is not yet implemented
+                } else if (text.contains("NEW//CHAT//CREATED//")) {
                     Platform.runLater(() -> {
-//                        String currentChat = MVCR.selectedChatBoxPane.getId();
-//                        if (MVCR.addUsersChatsToScreen(MVCR.MyUser, Database.getUsersChatsFromDatabase(MVCR.MyUser.getId()))) { // look at this part, its strange, note sure about it.
-//                            for (Node child : MVCR.getHistoryVBox().getChildren()) {
-//                                if (Objects.equals(child.getId(), currentChat)) {
-//                                    System.out.println("Inside the if statement");
-//                                    MVCR.selectedChatBoxPane = (Pane) child;
-//                                    MVCR.selectedChatBoxPane.setStyle("-fx-border-color: skyblue; -fx-border-radius: 15px; -fx-border-width: 0.5px");
-//                                }
-//                            }
-//                        }
+                        String receiverName = receivedMessage.getText().split("//")[3];
+                        String receiverId = receivedMessage.getText().split("//")[4];
+                        int receivedConversationId = Integer.parseInt(receivedMessage.getText().split("//")[5]);
+
+                        Pane newChatBoxPane = MVCR.createChatBoxPaneComponent(receiverName, receiverId);
+                        if (newChatBoxPane == null) {
+                            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Error in creating chat Pane", "Could not create chat Pane in the ui, try again later.");
+                            return;
+                        }
+
+                        MVCR.getHistoryVBox().getChildren().add(newChatBoxPane);
+
+                        MVCR.finalizeChatBoxComponentCreation(receiverId, receivedConversationId, newChatBoxPane);
                     });
                 }
             }
