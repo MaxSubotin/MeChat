@@ -13,6 +13,7 @@ import util.RegularChat;
 import java.io.IOException;
 import java.sql.SQLOutput;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class TemporaryChatBoxController {
 
@@ -37,6 +38,15 @@ public class TemporaryChatBoxController {
         if (tempNameId == null) {
             MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "User not found", "Could not find a user with the name " + tempName + ", try a different one.");
             return; // user was not found, do nothing.
+        }
+
+        // Check if there is already a chat with that person
+        for (Pane chatBoxPane: MVCR.MyUser.userChats.keySet()) {
+            RegularChat chat = MVCR.MyUser.userChats.get(chatBoxPane);
+            if (Objects.equals(tempNameId, chat.getReceiver())) {
+                MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Chat already exists", "Could not create chat Pane in the ui because it already exists, try again later.");
+                return;
+            }
         }
 
         Pane chatBoxPane = MVCR.createChatBoxPaneComponent(tempName, tempNameId);
