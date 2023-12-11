@@ -92,24 +92,31 @@ public class ChatBoxController {
                 HBox chatBubblePane = fxmlLoader.load();
                 ChatBubbleController controller = fxmlLoader.getController();
 
-
-                // If the message was from the current user then we make it blue and positioned on the right side
-                if (Objects.equals(message.getSender(), MVCR.MyUser.getId())) {
-                    controller.initMessageBubble(message, MVCR, true);
-                    controller.setMessageBubbleLabelColorBlue();
-                    chatBubblePane.setAlignment(Pos.CENTER_RIGHT);
-                } else
-                    controller.initMessageBubble(message, MVCR, false);
-
+                messageBubbleLogic(message, chatBubblePane, controller, MVCR);
 
                 if (Objects.equals(message.getText(), "--< this message was deleted >--")) {
                     controller.setMessageBubbleLabelDeleted();
                 }
 
-                MVCR.getChatVBox().getChildren().add(chatBubblePane);
+                MVCR.addChatBubbleToScreen(chatBubblePane);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * This method handles the placement of the message bubble on screen. (place it on the left with green outline OR on the right with blue outline).
+     */
+    public static void messageBubbleLogic(Message message, HBox chatBubblePane, ChatBubbleController controller, MainViewController MVCR) {
+        // If the message was from the current user then we make it blue and positioned on the right side
+        if (Objects.equals(message.getSender(), MVCR.MyUser.getId())) {
+            controller.initMessageBubble(message, MVCR, true);
+            controller.setMessageBubbleLabelColorBlue();
+            chatBubblePane.setAlignment(Pos.CENTER_RIGHT);
+        } else {
+            controller.initMessageBubble(message, MVCR, false);
+            chatBubblePane.setAlignment(Pos.CENTER_LEFT);
         }
     }
 

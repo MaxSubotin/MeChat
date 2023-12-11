@@ -38,7 +38,6 @@ public class RegularChat implements ChatMethods {
 
         try {
             // Adding the new message to the array and the database
-            messages.add(message);
             if (Database.addMessageToDatabase(message, getConversation_id())) {
 
                 // Turn Message object into json format

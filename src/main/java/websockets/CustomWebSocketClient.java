@@ -1,4 +1,5 @@
 package websockets;
+
 import com.google.gson.Gson;
 import controllers.ChatBoxController;
 import controllers.ChatBubbleController;
@@ -6,7 +7,6 @@ import controllers.MainViewController;
 import database.Database;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -18,7 +18,6 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import util.Message;
 import util.MessageAdapter;
-import util.RegularChat;
 import util.User;
 import com.google.gson.GsonBuilder;
 
@@ -174,35 +173,32 @@ public class CustomWebSocketClient extends WebSocketClient {
             }
         }
         else {
-            // Explanation: we will know that the current user is looking at the chat where the message was received if the sender of the message
-            // AND the chatNameLabel.getText() are equal, there for the current user is looking at the chat when the message is received
-
-            if (Objects.equals(MVCR.MyUser.getId(),receivedMessage.getSender()) || Objects.equals(MVCR.selectedChatBoxUserId, receivedMessage.getSender())) {
+            if (Objects.equals(MVCR.MyUser.getId(),receivedMessage.getSender()) || Objects.equals(MVCR.MyUser.getId(),receivedMessage.getReceiver())) {
                 Platform.runLater(() -> {
                     try {
                         // Creating a new message bubble on the screen and adding the users text into it
                         FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBubbleComponent.fxml"));
-                        HBox chatBubble = fxmlLoader.load();
-
+                        HBox chatBubblePane = fxmlLoader.load();
                         ChatBubbleController controller = fxmlLoader.getController();
-                        if (Objects.equals(MVCR.MyUser.getId(),receivedMessage.getSender()))
-                            controller.initMessageBubble(receivedMessage, MVCR, true);
-                        else
-                            controller.initMessageBubble(receivedMessage, MVCR, false);
 
-                        if (Objects.equals(receivedMessage.getSender(), MVCR.MyUser.getId())) {
-                            controller.setMessageBubbleLabelColorBlue();
-                            chatBubble.setAlignment(Pos.CENTER_RIGHT);
+                        ChatBoxController.messageBubbleLogic(receivedMessage, chatBubblePane, controller, MVCR);
+
+                        if (Objects.equals(MVCR.MyUser.getId(),receivedMessage.getSender()) ||
+                                (Objects.equals(MVCR.MyUser.getId(),receivedMessage.getReceiver()) && Objects.equals(MVCR.selectedChatBoxUserId, receivedMessage.getSender())))
+                            MVCR.MyUser.addMessageToChat(MVCR.selectedChatBoxPane, receivedMessage);
+                        else { // you are the receiver AND you are NOT looking at the chat (there for we cant use: MVCR.selectedChatBoxPane)
+                            String correctChatBoxId = Database.compareStrings(receivedMessage.getSender(), receivedMessage.getReceiver()) + "_" + receivedMessage.getConversation_id();
+                            for (Pane chat: MVCR.MyUser.getUserChats().keySet()) {
+                                if (Objects.equals(chat.getId(), correctChatBoxId)) {
+                                    MVCR.MyUser.addMessageToChat(chat, receivedMessage);
+                                    break;
+                                }
+                            }
                         }
-                        else
-                            chatBubble.setAlignment(Pos.CENTER_LEFT);
 
-                        // Add message bubble to the screen
-                        MVCR.getChatVBox().getChildren().add(chatBubble);
-
-                        // adding the new message to the list of messages for this user
-                        if (!Objects.equals(MVCR.MyUser.getId(),receivedMessage.getSender()))
-                            MVCR.MyUser.getUserChats().get(MVCR.selectedChatBoxPane).getMessages().add(receivedMessage);
+                        if (Objects.equals(MVCR.MyUser.getId(),receivedMessage.getSender()) || Objects.equals(MVCR.selectedChatBoxUserId, receivedMessage.getSender())) {
+                            MVCR.addChatBubbleToScreen(chatBubblePane);
+                        }
 
                     } catch (IOException e) {
                         throw new RuntimeException(e);

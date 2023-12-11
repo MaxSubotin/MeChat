@@ -74,6 +74,10 @@ public class User {
         getUserChats().put(pane, chat);
     }
 
+    public void addMessageToChat(Pane chat, Message message) {
+        userChats.get(chat).getMessages().add(message);
+    }
+
     public boolean updatePassword(String hashedPassword) {
 
         // Update the database

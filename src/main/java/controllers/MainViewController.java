@@ -272,6 +272,10 @@ public class MainViewController {
         setConnectedLabelOff();
     }
 
+    public void addChatBubbleToScreen(Pane chatBubblePane) {
+        chatVBox.getChildren().add(chatBubblePane);
+    }
+
     public Pane createChatBoxPaneComponent(String receiverName, String receiverId) {
         try {
             // Create the conversation chat box
