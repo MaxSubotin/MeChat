@@ -18,6 +18,7 @@ import java.util.Objects;
 public class TemporaryChatBoxController {
 
     private MainViewController MVCR;
+    public boolean isGroupChat = false;
 
     @FXML
     TextField nameTextField;
@@ -27,12 +28,19 @@ public class TemporaryChatBoxController {
 
     @FXML
     public void confirmButtonOnClick() {
-        // Creating the actual chat box of the left side
-
-        // Get the username of who we want to contact
         String tempName = this.getNameTextField();
         if (tempName.isEmpty()) return;
 
+        if (!isGroupChat) addRegularChat(tempName);
+        else addGroupChat(tempName);
+    }
+
+    @FXML
+    public void cancelButtonOnClick() {
+        removeLastElement();
+    }
+
+    private void addRegularChat(String tempName) {
         // Find the userId of the person we want to chat with
         String tempNameId = Database.getUserIdByUsername(tempName);
         if (tempNameId == null) {
@@ -71,9 +79,8 @@ public class TemporaryChatBoxController {
         }
     }
 
-    @FXML
-    public void cancelButtonOnClick() {
-        removeLastElement();
+    private void addGroupChat(String tempName) {
+
     }
 
 

@@ -9,6 +9,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -44,7 +45,7 @@ public class MainViewController {
     @FXML
     AnchorPane mainView;
     @FXML
-    ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, female_AvatarImage;
+    ImageView profileButton, newChatButton, newGroupChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, female_AvatarImage;
     @FXML
     VBox historyVBox, chatVBox;
     @FXML
@@ -65,7 +66,7 @@ public class MainViewController {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
     @FXML
-    public void newChatButtonOnClick() {
+    public void newChatButtonOnClick(MouseEvent event) {
         // Counting the new chat boxes, only one on the screen at a time
         if (temporaryChatBoxCounter > 0) return;
         if (MyUser == null) return;
@@ -79,6 +80,13 @@ public class MainViewController {
 
             TemporaryChatBoxController controller = fxmlLoader.getController();
             controller.setMainViewControllerReference(this); // Giving a reference to the main controller for communication
+
+            String buttonId = ((ImageView) event.getSource()).getId();
+            if (Objects.equals(buttonId, "newGroupChatButton")) {
+                controller.isGroupChat = true;
+                controller.nameTextField.setPromptText("enter a group name");
+            }
+
             historyVBox.getChildren().add(temporaryChatBoxComponent);
             getFocus();
 

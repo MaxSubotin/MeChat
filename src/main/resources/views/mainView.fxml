@@ -63,7 +63,7 @@
       </VBox>
       <HBox alignment="CENTER_RIGHT" layoutY="561.0" prefHeight="40.0" prefWidth="900.0" style="-fx-background-color: #2B2E30;">
          <children>
-            <HBox alignment="CENTER" prefHeight="40.0" prefWidth="201.0" spacing="35.0">
+            <HBox alignment="CENTER" prefHeight="40.0" prefWidth="201.0" spacing="20.0">
                <children>
                   <ImageView fx:id="profileButton" fitHeight="23.0" fitWidth="23.0" onMouseClicked="#profileButtonOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounceBig">
                      <image>
@@ -76,6 +76,14 @@
                   <ImageView fx:id="newChatButton" fitHeight="23.0" fitWidth="23.0" onMouseClicked="#newChatButtonOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounceBig">
                      <image>
                         <Image url="@../images/newmessage.png" />
+                     </image>
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                  </ImageView>
+                  <ImageView fx:id="newGroupChatButton" fitHeight="38.0" fitWidth="38.0" layoutX="98.0" layoutY="18.0" onMouseClicked="#newChatButtonOnClick" pickOnBounds="true" preserveRatio="true" styleClass="bounceBig">
+                     <image>
+                        <Image url="@../images/groupchat.png" />
                      </image>
                      <cursor>
                         <Cursor fx:constant="HAND" />
