@@ -11,7 +11,7 @@ import java.util.Objects;
 
 public class User {
     private String name, id, userImage;
-    public HashMap<Pane, RegularChat> userChats = new HashMap<>();
+    public HashMap<Pane, Chat> userChats = new HashMap<>();
 
     public User(String _name, String _id, String _userImage) {
         this.name = _name;
@@ -68,9 +68,9 @@ public class User {
 
     }
 
-    public HashMap<Pane, RegularChat> getUserChats() { return userChats; }
+    public HashMap<Pane, Chat> getUserChats() { return userChats; }
 
-    public void addChatToUser(Pane pane, RegularChat chat) {
+    public void addChatToUser(Pane pane, Chat chat) {
         getUserChats().put(pane, chat);
     }
 

@@ -5,6 +5,7 @@
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
@@ -29,7 +30,7 @@
          <children>
             <HBox prefHeight="35.0" prefWidth="700.0" style="-fx-background-color: #2B2E30;">
                <children>
-                  <Label fx:id="chatNameLabel" alignment="BOTTOM_CENTER" prefHeight="35.0" style="-fx-background-color: #2B2E30;" textFill="WHITESMOKE">
+                  <Label fx:id="chatNameLabel" alignment="BOTTOM_CENTER" onMouseClicked="#openInfoGroupPaneButtonOnClick" prefHeight="35.0" style="-fx-background-color: #2B2E30;" textFill="WHITESMOKE">
                      <padding>
                         <Insets left="15.0" />
                      </padding>
@@ -130,7 +131,7 @@
       </HBox>
       <Pane fx:id="loginAndSignupPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: rgba(0,0,0,0.75);" visible="false">
          <children>
-            <Pane layoutX="300.0" layoutY="115.0" prefHeight="350.0" prefWidth="300.0" style="-fx-background-color: whitesmoke; -fx-background-radius: 25;">
+            <Pane layoutX="300.0" layoutY="125.0" prefHeight="350.0" prefWidth="300.0" style="-fx-background-color: whitesmoke; -fx-background-radius: 25;">
                <children>
                   <VBox alignment="CENTER" prefHeight="350.0" prefWidth="300.0" spacing="10.0">
                      <children>
@@ -191,7 +192,7 @@
       </Pane>
       <Pane fx:id="settingsPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: rgba(0,0,0,0.75);" visible="false">
          <children>
-            <Pane layoutX="263.0" layoutY="125.0" prefHeight="350.0" prefWidth="400.0" style="-fx-background-color: whitesmoke; -fx-background-radius: 25;">
+            <Pane layoutX="250.0" layoutY="125.0" prefHeight="350.0" prefWidth="400.0" style="-fx-background-color: whitesmoke; -fx-background-radius: 25;">
                <children>
                   <VBox alignment="CENTER" prefHeight="350.0" prefWidth="400.0">
                      <children>
@@ -328,6 +329,230 @@
                         <Button fx:id="settingsCloseButton" alignment="CENTER" mnemonicParsing="false" onAction="#closeSettingsButtonOnClick" text="Close">
                            <VBox.margin>
                               <Insets top="20.0" />
+                           </VBox.margin>
+                           <styleClass>
+                              <String fx:value="roundLook" />
+                              <String fx:value="buttonPaddingBig" />
+                              <String fx:value="bounceSmall" />
+                           </styleClass>
+                           <font>
+                              <Font size="16.0" />
+                           </font>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </Button>
+                     </children>
+                  </VBox>
+               </children>
+            </Pane>
+         </children>
+      </Pane>
+      <Pane fx:id="groupInfoPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: rgba(0,0,0,0.75);" visible="false">
+         <children>
+            <Pane layoutX="235.0" layoutY="100.0" prefHeight="400.0" prefWidth="430.0" style="-fx-background-color: whitesmoke; -fx-background-radius: 25;">
+               <children>
+                  <VBox alignment="CENTER" prefHeight="400.0" prefWidth="430.0">
+                     <children>
+                        <Label alignment="CENTER" prefHeight="17.0" prefWidth="375.0" text="Group Chat Information:">
+                           <font>
+                              <Font name="Damascus Regular" size="22.0" />
+                           </font>
+                           <VBox.margin>
+                              <Insets bottom="15.0" />
+                           </VBox.margin>
+                        </Label>
+                        <HBox alignment="CENTER" prefHeight="32.0" prefWidth="250.0" spacing="10.0">
+                           <children>
+                              <Label text="Group Name:">
+                                 <font>
+                                    <Font name="Damascus Regular" size="16.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="infoGroupNameLabel" text="&lt;the name&gt;">
+                                 <font>
+                                    <Font name="Damascus Regular" size="16.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER" prefHeight="32.0" prefWidth="250.0" spacing="10.0">
+                           <children>
+                              <Label text="Admin Name:">
+                                 <font>
+                                    <Font name="Damascus Regular" size="16.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="infoAdminNameLabel" text="&lt;the name&gt;">
+                                 <font>
+                                    <Font name="Damascus Regular" size="16.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                           <VBox.margin>
+                              <Insets bottom="5.0" />
+                           </VBox.margin>
+                        </HBox>
+                        <ScrollPane fx:id="adminPane" hbarPolicy="NEVER" maxWidth="400.0" prefHeight="200.0" prefWidth="400.0">
+                          <content>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="423.0" prefWidth="400.0">
+                                 <children>
+                                    <VBox alignment="CENTER" prefHeight="423.0" prefWidth="400.0">
+                                       <children>
+                                          <Label fx:id="infoAdminPanelLabel" disable="true" text="Admin Panel:">
+                                             <font>
+                                                <Font name="Damascus Regular" size="22.0" />
+                                             </font>
+                                             <VBox.margin>
+                                                <Insets bottom="10.0" top="10.0" />
+                                             </VBox.margin>
+                                          </Label>
+                                          <HBox fx:id="infoEditGroupNameHBox" alignment="CENTER" disable="true" prefHeight="32.0" prefWidth="250.0" spacing="10.0">
+                                             <children>
+                                                <Label text="Edit Group Name: ">
+                                                   <font>
+                                                      <Font name="Damascus Regular" size="16.0" />
+                                                   </font>
+                                                </Label>
+                                                <TextField fx:id="infoNewGroupNameField" promptText="new group name" styleClass="roundLook" />
+                                                <Button fx:id="infoNewGroupNameSaveButton" mnemonicParsing="false" onAction="#infoNewGroupNameSaveButtonOnClick" text="Save">
+                                                   <styleClass>
+                                                      <String fx:value="roundLook" />
+                                                      <String fx:value="buttonPaddingSmall" />
+                                                      <String fx:value="bounceSmall" />
+                                                   </styleClass>
+                                                   <cursor>
+                                                      <Cursor fx:constant="HAND" />
+                                                   </cursor>
+                                                </Button>
+                                             </children>
+                                             <VBox.margin>
+                                                <Insets top="5.0" />
+                                             </VBox.margin>
+                                          </HBox>
+                                          <HBox fx:id="infoChangeGroupIconHBox" alignment="CENTER" disable="true" prefHeight="80.0" prefWidth="375.0" spacing="10.0">
+                                             <children>
+                                                <Label text="Change Group Icon:">
+                                                   <font>
+                                                      <Font name="Damascus Regular" size="16.0" />
+                                                   </font>
+                                                </Label>
+                                                <HBox fx:id="maleAvatarHBox1" alignment="CENTER" fillHeight="false" maxHeight="62.0" maxWidth="62.0" minHeight="62.0" minWidth="62.0">
+                                                   <children>
+                                                      <ImageView fx:id="male_GroupImage" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true">
+                                                         <image>
+                                                            <Image url="@../images/male.png" />
+                                                         </image>
+                                                         <cursor>
+                                                            <Cursor fx:constant="HAND" />
+                                                         </cursor>
+                                                      </ImageView>
+                                                   </children>
+                                                   <HBox.margin>
+                                                      <Insets />
+                                                   </HBox.margin>
+                                                   <padding>
+                                                      <Insets top="-3.0" />
+                                                   </padding>
+                                                </HBox>
+                                                <HBox fx:id="femaleAvatarHBox1" alignment="CENTER" maxHeight="62.0" maxWidth="62.0" minHeight="62.0" minWidth="62.0">
+                                                   <children>
+                                                      <ImageView fx:id="female_GroupImage" fitHeight="60.0" fitWidth="60.0" onMouseClicked="#avatarImageOnClick" pickOnBounds="true" preserveRatio="true">
+                                                         <image>
+                                                            <Image url="@../images/female.png" />
+                                                         </image>
+                                                         <cursor>
+                                                            <Cursor fx:constant="HAND" />
+                                                         </cursor>
+                                                      </ImageView>
+                                                   </children>
+                                                   <padding>
+                                                      <Insets top="-3.0" />
+                                                   </padding>
+                                                </HBox>
+                                                <Button fx:id="infoGroupIconSaveButton" mnemonicParsing="false" onAction="#infoGroupIconSaveButtonOnClick" text="Save">
+                                                   <styleClass>
+                                                      <String fx:value="roundLook" />
+                                                      <String fx:value="buttonPaddingSmall" />
+                                                      <String fx:value="bounceSmall" />
+                                                   </styleClass>
+                                                   <cursor>
+                                                      <Cursor fx:constant="HAND" />
+                                                   </cursor>
+                                                </Button>
+                                             </children>
+                                             <padding>
+                                                <Insets bottom="5.0" top="5.0" />
+                                             </padding>
+                                          </HBox>
+                                          <HBox fx:id="infoAddGroupMemberHBox" alignment="CENTER" disable="true" prefHeight="32.0" prefWidth="250.0" spacing="10.0">
+                                             <children>
+                                                <Label text="Add Member:">
+                                                   <font>
+                                                      <Font name="Damascus Regular" size="16.0" />
+                                                   </font>
+                                                </Label>
+                                                <TextField fx:id="infoNewGroupMemberNameField" promptText="username" styleClass="roundLook" />
+                                                <Button fx:id="infoNewGroupMemberAddButton" mnemonicParsing="false" onAction="#infoNewGroupMemberAddButtonOnClick" text="Add">
+                                                   <styleClass>
+                                                      <String fx:value="roundLook" />
+                                                      <String fx:value="buttonPaddingSmall" />
+                                                      <String fx:value="bounceSmall" />
+                                                   </styleClass>
+                                                   <cursor>
+                                                      <Cursor fx:constant="HAND" />
+                                                   </cursor>
+                                                </Button>
+                                             </children>
+                                             <VBox.margin>
+                                                <Insets bottom="10.0" />
+                                             </VBox.margin>
+                                          </HBox>
+                                          <Label text="Group Members:">
+                                             <font>
+                                                <Font name="Damascus Regular" size="16.0" />
+                                             </font>
+                                          </Label>
+                                          <ListView fx:id="infoGroupMembersList" maxWidth="320.0" minHeight="-Infinity" prefHeight="150.0" prefWidth="200.0" />
+                                          <HBox fx:id="infoDeleteGroupHBox" alignment="TOP_CENTER" disable="true" maxHeight="50.0" prefHeight="35.0" prefWidth="200.0" spacing="50.0">
+                                             <children>
+                                                <HBox fx:id="infoDeleteGroupButton" alignment="CENTER" maxHeight="35.0" onMouseClicked="#infoDeleteGroupOnClick" prefHeight="35.0" prefWidth="178.0" spacing="10.0" styleClass="bounceSmall">
+                                                   <children>
+                                                      <Label text="Delete Group">
+                                                         <font>
+                                                            <Font size="16.0" />
+                                                         </font>
+                                                      </Label>
+                                                      <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                                                         <cursor>
+                                                            <Cursor fx:constant="HAND" />
+                                                         </cursor>
+                                                         <image>
+                                                            <Image url="@../images/trash.png" />
+                                                         </image>
+                                                      </ImageView>
+                                                   </children>
+                                                   <HBox.margin>
+                                                      <Insets left="10.0" right="10.0" />
+                                                   </HBox.margin>
+                                                   <cursor>
+                                                      <Cursor fx:constant="HAND" />
+                                                   </cursor>
+                                                </HBox>
+                                             </children>
+                                             <VBox.margin>
+                                                <Insets top="5.0" />
+                                             </VBox.margin>
+                                          </HBox>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </AnchorPane>
+                          </content>
+                        </ScrollPane>
+                        <Button fx:id="infoGroupPaneCloseButton" alignment="CENTER" mnemonicParsing="false" onAction="#closeInfoGroupPaneButtonOnClick" text="Close">
+                           <VBox.margin>
+                              <Insets top="15.0" />
                            </VBox.margin>
                            <styleClass>
                               <String fx:value="roundLook" />

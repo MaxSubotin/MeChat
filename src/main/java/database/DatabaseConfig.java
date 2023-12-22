@@ -9,10 +9,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public class DatabaseConfig {
-    private static String dbHost = "trumpet.db.elephantsql.com";
-    private static String dbName = "pjsovuwl";
-    private static String user = "pjsovuwl";
-    private static String password = "jziRZfERM9zpFwsoIYay5aD7-cKnaWcy";
+    private static String dbHost = "localhost:5432"; //"trumpet.db.elephantsql.com";
+    private static String dbName = "postgres"; //"pjsovuwl";
+    private static String user = "postgres"; //"pjsovuwl";
+    private static String password = "123456"; //"jziRZfERM9zpFwsoIYay5aD7-cKnaWcy";
     private static String dbUrl = null;
     private static HikariDataSource dataSource;
 
@@ -30,8 +30,8 @@ public class DatabaseConfig {
             config.setUsername(user);
             config.setPassword(password);
 
-            config.setMaximumPoolSize(2); // Adjust this as per your requirement
-            config.setConnectionTimeout(10000);
+            config.setMaximumPoolSize(5); // Adjust this as per your requirement
+            config.setConnectionTimeout(90000);
             dataSource = new HikariDataSource(config);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();

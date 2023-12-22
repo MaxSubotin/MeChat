@@ -26,15 +26,17 @@ package websockets;/*
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gson.GsonBuilder;
-import util.Message;
+import com.google.gson.reflect.TypeToken;
+import util.*;
 import database.Database;
 import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
@@ -43,7 +45,6 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import com.google.gson.Gson;
-import util.MessageAdapter;
 
 /**
  * A simple WebSocketServer implementation. Keeps track of a "chatroom".
@@ -52,7 +53,11 @@ public class CustomWebSocketServer extends WebSocketServer {
 
     private Map<WebSocket, String> connectedUsersMap;
     private Map<String, WebSocket> reverseLookupMap;
-    private final Gson gson = new GsonBuilder().registerTypeAdapter(Message.class, new MessageAdapter()).create();
+    //private final Gson gson = new GsonBuilder().registerTypeAdapter(Message.class, new MessageAdapter()).create();
+    public final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Message.class, new MessageAdapter())
+            .registerTypeAdapterFactory(new MessageTypeAdapterFactory())
+            .create();
 
     public CustomWebSocketServer(int port, Draft_6455 draft) {
         super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
@@ -74,14 +79,13 @@ public class CustomWebSocketServer extends WebSocketServer {
             reverseLookupMap.put(userId, conn);
 
             // Create a system message
-            Message sysMessage = new Message("CONNECT//" + userId, userId, userId, new Timestamp(System.currentTimeMillis()).toString() ,"-1");
-            sysMessage.setIsSystemMessage(true);
+            SystemMessage systemMessage = new SystemMessage("User connected", userId, Message.createTimestamp(), "-1", SystemMessageType.CONNECT);
 
             // Serialize the message object to JSON
-            String jsonMessage = gson.toJson(sysMessage);
-
+            String jsonMessage = gson.toJson(systemMessage);
             // Send the json system message
             onMessage(conn,jsonMessage);
+
             System.out.println(userId + " has entered the app!");
         } else {
             // Invalid session token, reject the WebSocket connection
@@ -97,11 +101,10 @@ public class CustomWebSocketServer extends WebSocketServer {
 
         if (userId != null) {
             // Create a system message
-            Message sysMessage = new Message("DISCONNECT//" + userId, userId, userId, new Timestamp(System.currentTimeMillis()).toString() ,"-1");
-            sysMessage.setIsSystemMessage(true);
+            SystemMessage systemMessage = new SystemMessage("User disconnected", userId, Message.createTimestamp(), "-1", SystemMessageType.DISCONNECT);
 
             // Serialize the message object to JSON
-            String jsonMessage = gson.toJson(sysMessage);
+            String jsonMessage = gson.toJson(systemMessage);
 
             // Send the json system message
             onMessage(conn,jsonMessage);
@@ -121,20 +124,34 @@ public class CustomWebSocketServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, String message) {
         // Deserialize the received JSON string back to your custom object
-        Message receivedMessage = gson.fromJson(message, Message.class);
+        Type messageType = new TypeToken<Message>() {}.getType();
+        Message receivedMessage = gson.fromJson(message, messageType);
 
-        if (receivedMessage.getIsSystemMessage()) { // it is a system message
+        if (receivedMessage instanceof SystemMessage) { // it is a system message
             broadcast(message);
         }
         else {
             // Access the receiver and send him the message. If he is disconnected then don't send him a message.
-            String receiverUserId = receivedMessage.getReceiver();
-            if (connectedUsersMap.containsValue(receiverUserId)) {
-                WebSocket Receiver = reverseLookupMap.get(receiverUserId);
-                Receiver.send(message);
+            if (receivedMessage instanceof RegularMessage) {
+                String receiverUserId = ((RegularMessage) receivedMessage).getReceiver();
+                if (connectedUsersMap.containsValue(receiverUserId)) {
+                    WebSocket Receiver = reverseLookupMap.get(receiverUserId);
+                    Receiver.send(message);
+                    // Using send method to show the message on the sender's screen
+                    conn.send(message);
+                }
+
+            } else {
+                ArrayList<String> receiversUserId = ((GroupMessage) receivedMessage).getReceivers();
+                for (String userId: receiversUserId) {
+                    if (connectedUsersMap.containsValue(userId)) {
+                        WebSocket Receiver = reverseLookupMap.get(userId);
+                        Receiver.send(message);
+                    }
+                }
             }
-            // Using send method to show the message on the sender's screen
-            conn.send(message);
+
+
         }
     }
 
@@ -190,7 +207,7 @@ public class CustomWebSocketServer extends WebSocketServer {
               break;
             }
         }
-        if (!Database.cleanUserSessionTabel())
+        if (!Database.cleanUserSessionTable())
             System.out.println("Could not properly clean user session table.");
     }
 

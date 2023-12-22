@@ -11,6 +11,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import util.SystemMessage;
+import util.SystemMessageType;
 
 import java.util.Objects;
 
@@ -26,12 +28,11 @@ public class ChatBubbleController {
     public boolean myMessageFlag = true;
 
 
-    public void initMessageBubble(Message message, MainViewController mvcr, boolean flag) {
+    public void initMessageBubble(Message message, MainViewController mvcr) {
         setMessage(message);
         setMessageBubbleLabel(message.getText());
 
-        myMessageFlag = flag;
-        if (myMessageFlag && (!Objects.equals(messageBubbleLabel.getText(), "--< this message was deleted >--")))
+        if (!(message instanceof SystemMessage) && Objects.equals(message.getSender(), mvcr.MyUser.getId()))
             setContextMenu();
         setTimestamps(message.getTimestamp());
         MVCR = mvcr;
@@ -120,10 +121,16 @@ public class ChatBubbleController {
                 System.out.println("Delete button clicked! Deleting message: " + messageBubbleLabel.getText());
 
                 if (Database.deleteMessageBubble(message)) {
-                    MVCR.webSocketClient.sendMessageToServer(MVCR.MyUser, "MESSAGE//DELETED//" + messageBubbleLabel.getText() + "//" + message.getTimestamp());
+                    MVCR.webSocketClient.sendMessageToServer(new SystemMessage(
+                            messageBubbleLabel.getText() + "//" + message.getTimestamp(),
+                            MVCR.MyUser.getId(),
+                            Message.createTimestamp(),
+                            message.getChatId(),
+                            SystemMessageType.MESSAGE_DELETED
+                    ));
                     setMessageBubbleLabelDeleted();
 
-                    if (!MVCR.MyUser.userChats.get(MVCR.selectedChatBoxPane).handleMessageDeleted(message.getText(), message.getTimestamp()))
+                    if (!MVCR.MyUser.userChats.get(MVCR.selectedChatBoxPane).deleteMessage(message.getText(), message.getTimestamp()))
                         MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Error in deleting a message", "Could not delete the message on the user side, please reload the application.");
 
                     bubbleHBox.setOnContextMenuRequested(null); // Remove the context menu event handler
