@@ -9,12 +9,12 @@ public class IdGenerator {
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    public static String generateUniqueUserId() {
-        String userId;
+    public static String generateUniqueId() {
+        String id;
         do {
-            userId = generateRandomString(ID_LENGTH);
-        } while (!Database.isUserIdUnique(userId)); // Check in the database that the user id is unique
-        return userId;
+            id = generateRandomString(ID_LENGTH);
+        } while (!Database.isUserIdUnique(id)); // Check in the database that the user id is unique
+        return id;
     }
 
     private static String generateRandomString(int length) {

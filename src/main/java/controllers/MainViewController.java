@@ -1,13 +1,18 @@
 package controllers;
 
 import database.Database;
+import database.DatabaseConfig;
+import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -16,6 +21,8 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
@@ -34,37 +41,38 @@ public class MainViewController {
     public CustomWebSocketClient webSocketClient;
 
     private int temporaryChatBoxCounter = 0;
-    public RegularChat currentRegularChat = null;
+    public Chat currentChat = null;
     public Pane selectedChatBoxPane;
-    public String selectedChatBoxUserId;
 
     private HBox selectedAvatarHbox;
 
     @FXML
     AnchorPane mainView;
     @FXML
-    ImageView profileButton, newChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, female_AvatarImage;
+    ImageView profileButton, newChatButton, newGroupChatButton, settingsButton, sendMessageButton, userPictureImageView, male_AvatarImage, female_AvatarImage, male_GroupImage, female_GroupImage;
     @FXML
     VBox historyVBox, chatVBox;
     @FXML
-    HBox settingsDeleteAccountButton;
+    HBox settingsDeleteAccountButton, infoDeleteGroupButton, infoEditGroupNameHBox, infoChangeGroupIconHBox, infoAddGroupMemberHBox, infoDeleteGroupHBox;
     @FXML
-    TextField messageTextField, settingsUsernameField, settingsPasswordField;
+    TextField messageTextField, settingsUsernameField, settingsPasswordField, infoNewGroupNameField, infoNewGroupMemberNameField;
     @FXML
-    Label chatNameLabel, userUsernameLabel, connectedLabel;
+    Label chatNameLabel, userUsernameLabel, connectedLabel, infoGroupNameLabel, infoAdminNameLabel, infoAdminPanelLabel;
     @FXML
-    Pane loginAndSignupPane, settingsPane;
+    Pane loginAndSignupPane, settingsPane, groupInfoPane;
     @FXML
-    Button settingsUsernameSaveButton, settingPasswordSaveButton, settingsCloseButton, settingAvatarSaveButton;
+    Button settingsUsernameSaveButton, settingPasswordSaveButton, settingsCloseButton, settingAvatarSaveButton, infoNewGroupNameSaveButton, infoGroupIconSaveButton, infoGroupPaneCloseButton, infoNewGroupMemberAddButton;
     @FXML
-    ScrollPane chatScrollPane;
+    ScrollPane chatScrollPane, adminPane;
+    @FXML
+    ListView infoGroupMembersList;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
-    // - - - - - - - - - Buttons OnClick Functions - - - - - - - - - //
+    // - - - - - - - - - Button OnClick Functions - - - - - - - - - //
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
     @FXML
-    public void newChatButtonOnClick() {
+    public void newChatButtonOnClick(MouseEvent event) {
         // Counting the new chat boxes, only one on the screen at a time
         if (temporaryChatBoxCounter > 0) return;
         if (MyUser == null) return;
@@ -78,6 +86,13 @@ public class MainViewController {
 
             TemporaryChatBoxController controller = fxmlLoader.getController();
             controller.setMainViewControllerReference(this); // Giving a reference to the main controller for communication
+
+            String buttonId = ((ImageView) event.getSource()).getId();
+            if (Objects.equals(buttonId, "newGroupChatButton")) {
+                controller.isGroupChat = true;
+                controller.nameTextField.setPromptText("enter a group name");
+            }
+
             historyVBox.getChildren().add(temporaryChatBoxComponent);
             getFocus();
 
@@ -94,8 +109,10 @@ public class MainViewController {
         String text = messageTextField.getText();
         if (text == null || text.isEmpty()) return;
 
-        if (!currentRegularChat.sendMessage(webSocketClient, text)) {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Could not send the message","There was a problem sending the message, please try again later.");
+        String message = (currentChat instanceof GroupChat) ? MyUser.getName() + ":\n" + text : text;
+
+        if (!currentChat.sendMessage(webSocketClient, message)) {
+            showAlertWithMessage(Alert.AlertType.ERROR, "Could not send the message", "There was a problem sending the message, please try again later.");
             return;
         }
 
@@ -121,6 +138,7 @@ public class MainViewController {
 
     @FXML
     public void settingsUsernameSaveButtonOnClick() {
+        String oldUsername = MyUser.getName();
         String newUsername = settingsUsernameField.getText();
 
         // Check new username with regex
@@ -133,7 +151,13 @@ public class MainViewController {
 
         // Check newUsername in database and update the database
         if (MyUser.setName(newUsername)) {
-            webSocketClient.sendMessageToServer(MyUser, "USERNAME//CHANGED//" + newUsername);
+            webSocketClient.sendMessageToServer(new SystemMessage(
+                    oldUsername + "//" + newUsername,
+                    MyUser.getId(),
+                    Message.createTimestamp(),
+                    "-1",
+                    SystemMessageType.USERNAME_CHANGED
+            ));
         } else {
             showAlertWithMessage(Alert.AlertType.ERROR,"Error", newUsername + " is already taken.\nTry a different username.");
         }
@@ -170,7 +194,13 @@ public class MainViewController {
     public void settingsDeleteAccountButtonOnClick() {
         if (MyUser != null) {
             if (Database.deleteUser(MyUser.getId()))
-                webSocketClient.sendMessageToServer(MyUser, "USERNAME//DELETED//" + MyUser.getName());
+                webSocketClient.sendMessageToServer(new SystemMessage(
+                        MyUser.getName(),
+                        MyUser.getId(),
+                        Message.createTimestamp(),
+                        "-1",
+                        SystemMessageType.USER_DELETED
+                ));
             else
                 System.out.println("Could not properly delete your user from the database, please try again later.");
 
@@ -232,7 +262,202 @@ public class MainViewController {
     }
 
 
+    @FXML
+    public void infoNewGroupNameSaveButtonOnClick() {
+        String newGroupName = infoNewGroupNameField.getText();
+        if (newGroupName.isEmpty()) return;
+
+        if (Database.updateGroupName(currentChat.getChatId(), newGroupName)) {
+            infoGroupNameLabel.setText(newGroupName);
+            setChatNameLabel(newGroupName);
+
+            ((GroupChat)currentChat).setGroupName(newGroupName);
+            ((Label) ((HBox) (selectedChatBoxPane.getChildren()).get(0)).getChildren().get(1)).setText(newGroupName);
+
+            infoNewGroupNameField.clear();
+
+            if (!currentChat.sendMessage(webSocketClient, "--< The group name was changed to: " + newGroupName + " >--")) {
+                showAlertWithMessage(Alert.AlertType.ERROR, "Error in renaming group", "There was a problem sending a message about the renaming of the group, please try again later.");
+                return;
+            }
+
+            webSocketClient.sendMessageToServer(new SystemMessage(
+                    newGroupName,
+                    MyUser.getId(),
+                    Message.createTimestamp(),
+                    currentChat.getChatId(),
+                    SystemMessageType.GROUP_CHAT_RENAMED
+            ));
+        }
+    }
+
+    @FXML
+    public void infoGroupIconSaveButtonOnClick() {}
+
+    @FXML
+    public void infoDeleteGroupOnClick() {
+        if (Database.deleteGroupChat(currentChat.getChatId())) {
+            String groupName = chatNameLabel.getText();
+            MyUser.userChats.remove(selectedChatBoxPane);
+            historyVBox.getChildren().remove(selectedChatBoxPane);
+            cleanChatBubbles();
+            setConnectedLabelText("");
+
+            webSocketClient.sendMessageToServer(new SystemMessage(
+                    groupName,
+                    MyUser.getId(),
+                    Message.createTimestamp(),
+                    currentChat.getChatId(),
+                    SystemMessageType.ADMIN_DELETED_GROUP
+            ));
+
+            currentChat = null;
+            selectedChatBoxPane = null;
+            closeInfoGroupPaneButtonOnClick();
+        }
+    }
+
+    @FXML
+    public void openInfoGroupPaneButtonOnClick() {
+        if (currentChat instanceof GroupChat) {
+            if (Objects.equals(MyUser.getId(), ((GroupChat) currentChat).getAdmin()))
+                enableAdminInfoPane();
+
+            loadGroupChatParticipants(currentChat.getChatId());
+            infoGroupNameLabel.setText(Database.getGroupNameByGroupId(currentChat.getChatId()));
+            infoAdminNameLabel.setText(Database.getUsernameById(((GroupChat) currentChat).getAdmin()));
+            groupInfoPane.setVisible(true);
+        }
+    }
+
+    @FXML
+    public void closeInfoGroupPaneButtonOnClick() {
+        groupInfoPane.setVisible(false);
+        disableAdminInfoPane();
+        adminPane.setVvalue(0);
+    }
+
+    @FXML
+    public void infoNewGroupMemberAddButtonOnClick() {
+        String newUserName = infoNewGroupMemberNameField.getText();
+        String newUserId = Database.getUserIdByUsername(newUserName);
+
+        ObservableList<String> currentItems = infoGroupMembersList.getItems();
+        if (currentItems.contains(newUserName) ||
+                Objects.equals(newUserId, ((GroupChat) currentChat).getAdmin())) {
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "User already in group", "The user you are tring to add is already in the group.");
+            return;
+        }
+
+        if (Database.addGroupChatParticipant(currentChat.getChatId(), newUserId)) {
+            currentItems.add(newUserName);
+            infoGroupMembersList.setItems(currentItems);
+            ((GroupChat)(currentChat)).getReceivers().add(newUserId);
+
+            if (!currentChat.sendMessage(webSocketClient, "--< " + newUserName + " has been added to the group chat! >--")) {
+                showAlertWithMessage(Alert.AlertType.ERROR, "Error in adding a member to group", "There was a problem sending a message about the new member of the group, please try again later.");
+                return;
+            }
+
+            webSocketClient.sendMessageToServer(new SystemMessage(
+                    newUserId + "//" + newUserName + "//" + chatNameLabel.getText(),
+                    MyUser.getId(),
+                    Message.createTimestamp(),
+                    currentChat.getChatId(),
+                    SystemMessageType.INVITE_TO_GROUP_CHAT
+            ));
+
+        }
+
+        infoNewGroupMemberNameField.clear();
+    }
+
+
     // Helper Functions
+
+    public void loadGroupChatParticipants(String groupId) {
+        infoGroupMembersList.getItems().clear();
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            ArrayList<String> groupChatParticipants = Database.getGroupChatParticipants(conn, groupId);
+            if (groupChatParticipants != null && !groupChatParticipants.isEmpty()) {
+                ObservableList<String> currentItems = infoGroupMembersList.getItems();
+
+                for (String participant: groupChatParticipants) {
+                    String participantUsername = Database.getUsernameById(participant);
+                    currentItems.add(Objects.equals(participant, ((GroupChat) currentChat).getAdmin()) ?
+                            participantUsername + " - admin" :
+                            participantUsername);
+                }
+                infoGroupMembersList.setItems(currentItems);
+
+                if (Objects.equals(((GroupChat)currentChat).getAdmin(), MyUser.getId()))
+                    setContextMenu();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setContextMenu() {
+        Platform.runLater(() -> {
+            // Create a context menu with a "delete" menu item
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem deleteItem = new MenuItem("Remove user");
+            deleteItem.setStyle("-fx-text-fill: whitesmoke;");
+            deleteItem.setText("Remove user");
+            contextMenu.getItems().add(deleteItem);
+            contextMenu.setId("listItemContextMenu");
+
+            // Set the context menu for the list view
+            infoGroupMembersList.setCellFactory(param -> {
+                ListCell<String> cell = new ListCell<>();
+                cell.textProperty().bind(cell.itemProperty());
+                cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
+                    if (isNowEmpty || cell.getText() == null) {
+                        cell.setContextMenu(null);
+                    } else {
+                        if (cell.getText().endsWith(" - admin")) {
+                            cell.setContextMenu(null); // Do not add context menu for items ending with " - admin"
+                        } else {
+                            cell.setContextMenu(contextMenu);
+                        }
+                    }
+                });
+                return cell;
+            });
+
+
+            // Add an action event handler for the "Delete" menu item
+            deleteItem.setOnAction(event -> {
+                String usernameToRemove = (String) infoGroupMembersList.getSelectionModel().getSelectedItem();
+                String userIdToRemove = Database.getUserIdByUsername(usernameToRemove);
+
+                if (userIdToRemove != null) {
+                    if (Database.removeGroupChatParticipant(currentChat.getChatId(), userIdToRemove)) {
+                        ((GroupChat) currentChat).getReceivers().remove(userIdToRemove);
+
+                        if (!currentChat.sendMessage(webSocketClient, "--< " + usernameToRemove + " has been removed from the group >--")) {
+                            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Error removing a user", "Could not send a message about removing a user form the group, try again later.");
+                            return;
+                        }
+
+                        webSocketClient.sendMessageToServer(new SystemMessage(
+                                userIdToRemove + "//" + usernameToRemove,
+                                MyUser.getId(),
+                                Message.createTimestamp(),
+                                currentChat.getChatId(),
+                                SystemMessageType.ADMIN_REMOVED_GROUP_USER
+                        ));
+
+                        infoGroupMembersList.getItems().remove(usernameToRemove);
+                    }
+                }
+            });
+
+
+
+        });
+    }
 
     public void closeChatAppWindow() {
         Stage stage = (Stage) getCurrentScene().getWindow();
@@ -242,6 +467,22 @@ public class MainViewController {
                 System.out.println("Could not complete the user session removal form the database. Error in closeChatAppWindow function in MainViewController.");
 
         System.exit(0);
+    }
+
+    public void disableAdminInfoPane() {
+        infoAdminPanelLabel.setDisable(true);
+        infoEditGroupNameHBox.setDisable(true);
+        infoChangeGroupIconHBox.setDisable(true);
+        infoAddGroupMemberHBox.setDisable(true);
+        infoDeleteGroupHBox.setDisable(true);
+    }
+
+    public void enableAdminInfoPane() {
+        infoAdminPanelLabel.setDisable(false);
+        infoEditGroupNameHBox.setDisable(false);
+        infoChangeGroupIconHBox.setDisable(false);
+        infoAddGroupMemberHBox.setDisable(false);
+        infoDeleteGroupHBox.setDisable(false);
     }
 
     public void turnChatInvisible() {
@@ -271,6 +512,30 @@ public class MainViewController {
         setConnectedLabelOff();
     }
 
+    public void addChatBubbleToScreen(Pane chatBubblePane) {
+        chatVBox.getChildren().add(chatBubblePane);
+    }
+
+    public Pane createChatBoxPaneComponent(String receiverName, String receiverImage, String chatId) {
+        try {
+            // Create the conversation chat box
+            FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
+            Pane chatBoxPane = fxmlLoader.load();
+
+            // Setting the name of the contact and an on-click event
+            ChatBoxController controller = fxmlLoader.getController();
+            controller.initChatBox(receiverName, receiverImage, this);
+
+            chatBoxPane.setOnMouseClicked(controller::chatBoxOnClick);
+            chatBoxPane.setCursor(Cursor.HAND);
+            chatBoxPane.setId(chatId);
+            return chatBoxPane;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static void showAlertWithMessage(Alert.AlertType type, String title, String errorMessage) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -291,7 +556,7 @@ public class MainViewController {
 
     public void setSelectedChatBoxPane(Pane chatBoxPane) { this.selectedChatBoxPane = chatBoxPane; }
 
-    public void setSelectedChatBoxUserId(String selectedChatBoxName) { this.selectedChatBoxUserId = selectedChatBoxName; }
+    //public void setSelectedChatBoxUserId(String selectedChatBoxName) { this.selectedChatBoxUserId = selectedChatBoxName; }
 
     public void setTemporaryChatBoxCounter(int temporaryChatBoxCounter) { this.temporaryChatBoxCounter = temporaryChatBoxCounter; }
 
@@ -301,5 +566,7 @@ public class MainViewController {
     public void setConnectedLabelText(String text) { connectedLabel.setText(text); }
 
     public Scene getCurrentScene() { return profileButton.getScene();}
+
+    public ListView getInfoGroupMembersList() { return infoGroupMembersList; }
 
 }

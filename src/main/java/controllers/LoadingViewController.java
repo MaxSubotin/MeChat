@@ -6,7 +6,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
+import util.Chat;
 import util.RegularChat;
+import util.RegularMessage;
 import util.User;
 import websockets.CustomWebSocketClient;
 
@@ -28,19 +30,19 @@ public class LoadingViewController {
 
     public boolean loadUserData() {
         // Load user chats
-        ArrayList<RegularChat> userChats = Database.getUsersChatsFromDatabase(user.getId());
+        ArrayList<Chat> userChats = Database.getUsersChatsFromDatabase(user.getId());
 
         // Establish a new websocket connection, login the user and add chats to the screen
         if (createWebsocketConnection(user)) {
             if (userChats != null) {
                 if (!addUsersChatsToScreen(user, userChats)) {
-                    showAlertWithMessage(Alert.AlertType.ERROR, "Error loading chats", "Could not load your chats to the screen, please try again later.");
+                    MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Error loading chats", "Could not load your chats to the screen, please try again later.");
                     return false;
                 }
             }
 
         } else {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Error in logging-in", "Could not log into you account after you signed-up, please try to log-in later.");
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Error in logging-in", "Could not log into you account after you signed-up, please try to log-in later.");
             return false;
         }
         return true;
@@ -56,8 +58,9 @@ public class LoadingViewController {
             MVCR.webSocketClient = new CustomWebSocketClient(new URI(URI_Address + session), user.getName(), MVCR.getCurrentScene(), MVCR);
 
             if (Database.getSessionByUserId(user.getId()) == null) {
-                if (Database.addSessionToDataBase(user.getId(), session)) // adding the connecting to the database to keep track of connected users
+                if (Database.addSessionToDataBase(user.getId(), session)) {// adding the connecting to the database to keep track of connected users
                     MVCR.webSocketClient.connect();
+                }
                 else {
                     MVCR.webSocketClient.close();
                     return false;
@@ -66,7 +69,7 @@ public class LoadingViewController {
             else MVCR.webSocketClient.onError(new Exception());
 
         } catch (URISyntaxException ex) {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Error", "URISyntaxException, Not a valid WebSocket URI\n" + ex);
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Error", "URISyntaxException, Not a valid WebSocket URI\n" + ex);
             return false;
         }
 
@@ -77,49 +80,47 @@ public class LoadingViewController {
     // - - - - - - - - - - - Helper Functions  - - - - - - - - - - - //
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
-    private boolean addUsersChatsToScreen(User user, ArrayList<RegularChat> usersRegularChats) { // this method requires there to be a reference to the MainViewController (MVCR)
-        if (usersRegularChats == null) return false;
+    public boolean addUsersChatsToScreen(User user, ArrayList<Chat> usersChats) { // this method requires there to be a reference to the MainViewController (MVCR)
+        if (usersChats == null) return false;
 
         MVCR.cleanChatBoxes(); // clean the chats of the left if there are any
 
-        for (RegularChat regularChat : usersRegularChats) {
+        for (Chat chat : usersChats) {
             try {
                 FXMLLoader fxmlLoader = new FXMLLoader(ChatBoxController.class.getResource("/views/chatBoxComponent.fxml"));
                 Pane chatBoxPane = fxmlLoader.load();
-                chatBoxPane.setId(Database.compareStrings(regularChat.getSender(), regularChat.getReceiver()) + "_" + regularChat.getConversation_id());
+                chatBoxPane.setId(chat.getChatId());
                 chatBoxPane.setCursor(Cursor.HAND);
 
+                ChatBoxController controller = fxmlLoader.getController();
+                controller.setMainViewControllerReference(MVCR);
 
-
-                User receiver = Database.getUserByUserId(regularChat.getReceiver());
-                if (receiver != null) {
-                    ChatBoxController controller = fxmlLoader.getController();
-                    controller.setMainViewControllerReference(MVCR);
-                    controller.setNameLabel(receiver.getName());
-                    controller.setUserImage(receiver.getUserImage());
-                    controller.setContextMenu();
-
-                    regularChat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
-                    if (regularChat.getMessages() != null) {
-                        MVCR.getHistoryVBox().getChildren().add(chatBoxPane);
-                        user.addChatToUser(chatBoxPane, regularChat); // adding the pane - chat reference to the hashmap for later use
+                if (chat instanceof RegularChat) {
+                    User receiver = Database.getUserByUserId(((RegularChat)chat).getReceiver());
+                    if (receiver != null) {
+                        controller.setNameLabel(receiver.getName());
+                        controller.setUserImage(receiver.getUserImage());
+                        controller.setContextMenu("RegularChat");
                     }
                 }
+                else { // need to get the group name, set the name, image and context menu, and controller reference
+                    controller.setNameLabel(Database.getGroupNameByGroupId(chat.getChatId()));
+                    controller.setUserImage(null); // this will set the default image
+                    controller.setContextMenu("GroupChat");
+                }
+
+                chat.setMessages(Database.getChatMessagesFromDatabase(chatBoxPane.getId())); // loading the messages from the database
+
+                if (chat.getMessages() != null) {
+                    MVCR.getHistoryVBox().getChildren().add(chatBoxPane);
+                    user.addChatToUser(chatBoxPane, chat); // adding the pane - chat reference to the hashmap for later use
+                }
+
             } catch (IOException e) {
-                showAlertWithMessage(Alert.AlertType.ERROR,"Error Loading Messages", "Could not load some messages from " + regularChat.getReceiver() + ". Please try again later.");
+                MainViewController.showAlertWithMessage(Alert.AlertType.ERROR,"Error Loading Messages", "Could not load some messages from chat: " + chat.getChatId() + ", Please try again later.");
                 return false;
             }
         }
         return true;
     }
-
-
-    public void showAlertWithMessage(Alert.AlertType type, String title, String errorMessage) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(errorMessage);
-        alert.showAndWait();
-    }
-
 }

@@ -3,8 +3,12 @@ package ui;
 import controllers.LoginSignupViewController;
 import controllers.MainViewController;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -16,6 +20,7 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.*;
 import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationTest;
+import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.matcher.control.LabeledMatchers;
 
 import java.io.IOException;
@@ -60,7 +65,7 @@ public class EndToEndTest extends ApplicationTest {
     @Order(1)
     @DisplayName("Test Login Logout:")
     public void testLoginLogoutScenario() {
-        loginProcess("Max", "123");
+        loginProcess("Max1", "Max1");
 
         // Wait for the main scene to be displayed using awaitility
         Awaitility.await().until(() -> primaryStage.getScene().lookup("#mainView") != null);
@@ -104,7 +109,7 @@ public class EndToEndTest extends ApplicationTest {
         verifyThat("#mainView", isVisible());
 
         clickOn("#newChatButton");
-        clickOn("#nameTextField").write("Max");
+        clickOn("#nameTextField").write("Max1");
         clickOn("#confirmButton");
         assertFalse(verifyErrorPopUp());
 
@@ -125,7 +130,7 @@ public class EndToEndTest extends ApplicationTest {
     @Order(4)
     @DisplayName("Test View Received Message:")
     public void testViewReceivedMessageScenario() {
-        loginProcess("Max", "123");
+        loginProcess("Max1", "Max1");
 
         // Wait for the main scene to be displayed using awaitility
         Awaitility.await().until(() -> primaryStage.getScene().lookup("#mainView") != null);
@@ -154,7 +159,7 @@ public class EndToEndTest extends ApplicationTest {
                             clickOn(chatLabel);
 
                             VBox chatVBox = lookup("#chatVBox").query();
-                            assertNotNull(chatVBox, "Could not find the historyVBox.");
+                            assertNotNull(chatVBox, "Could not find the chatVBox.");
 
                             if (!chatVBox.getChildren().isEmpty()) {
                                 Node lastChild = chatVBox.getChildren().get(chatVBox.getChildren().size() - 1);
@@ -219,7 +224,7 @@ public class EndToEndTest extends ApplicationTest {
     @Order(6)
     @DisplayName("Test View Delete a Message:")
     public void testViewDeleteMessageScenario() { // trying to log into a deleted account
-        loginProcess("Max", "123");
+        loginProcess("Max1", "Max1");
 
         // Wait for the main scene to be displayed using awaitility
         Awaitility.await().until(() -> primaryStage.getScene().lookup("#mainView") != null);
@@ -302,6 +307,108 @@ public class EndToEndTest extends ApplicationTest {
 
 
     @Test
+    @Order(8)
+    @DisplayName("Test Create Group Chat:")
+    public void testCreateGroupChatScenario() {
+        loginProcess("tEST1", "Test1");
+
+        // Wait for the main scene to be displayed using awaitility
+        Awaitility.await().until(() -> primaryStage.getScene().lookup("#mainView") != null);
+
+        assertFalse(verifyErrorPopUp());
+        verifyThat("#mainView", isVisible());
+
+        clickOn("#newGroupChatButton");
+        clickOn("#nameTextField").write("TestGroup");
+        clickOn("#confirmButton");
+        assertFalse(verifyErrorPopUp());
+
+        // Lookup the VBox with id "HistoryVBox"
+        VBox historyVBox = lookup("#historyVBox").query();
+        assertNotNull(historyVBox, "Could not find the historyVBox.");
+
+        Node groupChat = historyVBox.getChildren().get(1);
+        clickOn(groupChat);
+        clickOn("#messageTextField").write("This is a test group message by testCreateGroupChatScenario.");
+        clickOn("#sendMessageButton");
+        assertFalse(verifyErrorPopUp());
+
+
+        clickOn("#chatNameLabel");
+        verifyThat("#groupInfoPane", isVisible());
+        assertFalse(verifyErrorPopUp());
+
+        // adding Max1
+        clickOn("#infoNewGroupMemberNameField").write("Max1");
+        clickOn("#infoNewGroupMemberAddButton");
+
+        // adding Shay1
+        clickOn("#infoNewGroupMemberNameField").write("Shay1");
+        clickOn("#infoNewGroupMemberAddButton");
+
+        clickOn("#infoGroupPaneCloseButton");
+        assertFalse(verifyErrorPopUp());
+
+        logoutProcess();
+    }
+
+    @Test
+    @Order(9)
+    @DisplayName("Test Remove User From Group:")
+    public void testRemoveUserFromGroupScenario() {
+        loginProcess("tEST1", "Test1");
+
+        // Wait for the main scene to be displayed using awaitility
+        Awaitility.await().until(() -> primaryStage.getScene().lookup("#mainView") != null);
+
+        assertFalse(verifyErrorPopUp());
+        verifyThat("#mainView", isVisible());
+
+        // Find the correct chat box
+        VBox historyVBox = lookup("#historyVBox").query();
+        assertNotNull(historyVBox, "Could not find the historyVBox.");
+
+        for (Node node : historyVBox.getChildren()) {
+            if (node instanceof Pane) {
+                Pane chatPane = (Pane) node;
+                if (chatPane.getChildren().size() == 1 && chatPane.getChildren().get(0) instanceof HBox) {
+                    HBox chatHBox = (HBox) chatPane.getChildren().get(0);
+                    List<Node> chatChildren = chatHBox.getChildren();
+
+                    // Assuming the ImageView is the first child and Label is the second child
+                    if (chatChildren.size() == 2 && chatChildren.get(1) instanceof Label) {
+                        Label chatLabel = (Label) chatChildren.get(1);
+                        String labelText = chatLabel.getText();
+
+                        if ("TestGroup".equals(labelText)) {
+                            // Found the correct node, click on and check to see if the message made it
+                            clickOn(chatLabel);
+
+                            VBox chatVBox = lookup("#chatVBox").query();
+                            assertNotNull(chatVBox, "Could not find the chatVBox.");
+
+                            if (!chatVBox.getChildren().isEmpty()) {
+                                Node firstChild = chatVBox.getChildren().get(0);
+
+                                if (firstChild instanceof HBox) {
+                                    assertEquals("tEST1:\nThis is a test group message by testCreateGroupChatScenario.".trim(),
+                                            ((Label) ((HBox) firstChild).getChildren().get(1)).getText()
+                                    );
+                                }
+                            }
+
+                            break; // Assuming you want to stop after finding the correct node
+                        }
+                    }
+                }
+            }
+        }
+
+        logoutProcess();
+    }
+
+
+    @Test
     @Order(13)
     @DisplayName("Test Login Delete Account:")
     public void testLoginDeleteAccScenario() {
@@ -329,6 +436,58 @@ public class EndToEndTest extends ApplicationTest {
         verifyThat("#loginAndSignupView", isVisible());
     }
 
+    @Test
+    @Order(15)
+    @DisplayName("Test Delete Group Chat:")
+    public void testDeleteGroupChatScenario() { // trying to log into a deleted account
+        loginProcess("Max1", "Max1");
+
+        // Wait for the main scene to be displayed using awaitility
+        Awaitility.await().until(() -> primaryStage.getScene().lookup("#mainView") != null);
+
+        assertFalse(verifyErrorPopUp());
+        verifyThat("#mainView", isVisible());
+
+        // Lookup the VBox with id "HistoryVBox"
+        VBox historyVBox = lookup("#historyVBox").query();
+        assertNotNull(historyVBox, "Could not find the historyVBox.");
+
+        for (Node node : historyVBox.getChildren()) {
+            if (node instanceof Pane) {
+                Pane chatPane = (Pane) node;
+                if (chatPane.getChildren().size() == 1 && chatPane.getChildren().get(0) instanceof HBox) {
+                    HBox chatHBox = (HBox) chatPane.getChildren().get(0);
+                    List<Node> chatChildren = chatHBox.getChildren();
+
+                    // Assuming the ImageView is the first child and Label is the second child
+                    if (chatChildren.size() == 2 && chatChildren.get(1) instanceof Label) {
+                        Label chatLabel = (Label) chatChildren.get(1);
+                        String labelText = chatLabel.getText();
+
+                        if ("TestGroup".equals(labelText)) {
+                            // Found the correct node, click on and check to see if the message made it
+                            clickOn(chatLabel);
+
+                            VBox chatVBox = lookup("#chatVBox").query();
+                            assertNotNull(chatVBox, "Could not find the chatVBox.");
+
+                            clickOn("#chatNameLabel");
+                            verifyThat("#groupInfoPane", isVisible());
+
+                            moveTo("#adminPane");
+                            scroll(40, VerticalDirection.UP);
+                            clickOn("#infoDeleteGroupButton");
+                            assertFalse(verifyErrorPopUp());
+
+                            break; // Assuming you want to stop after finding the correct node
+                        }
+                    }
+                }
+            }
+        }
+
+        logoutProcess();
+    }
 
 
     // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 // 🔻 //

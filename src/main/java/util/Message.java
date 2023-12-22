@@ -1,16 +1,15 @@
 package util;
 
-public class Message {
-    private String text, sender, receiver, timestamp, conversation_id;
-    private boolean isSystemMessage;
+import java.sql.Timestamp;
 
-    public Message(String _text, String _sender, String _receiver, String _timestamp, String _conversation_id) {
+public abstract class Message {
+    public String text, sender, timestamp, chatId;
+
+    public Message(String _text, String _sender, String _timestamp, String _chatId) {
         this.text = _text;
         this.sender = _sender;
-        this.receiver = _receiver;
         this.timestamp = _timestamp;
-        this.conversation_id = _conversation_id;
-        this.isSystemMessage = false;
+        this.chatId = _chatId;
     }
 
     // getters and setters
@@ -38,23 +37,9 @@ public class Message {
         this.timestamp = timestamp;
     }
 
-    public void setIsSystemMessage(boolean systemMessage) {
-        isSystemMessage = systemMessage;
-    }
+    public static String createTimestamp() { return new Timestamp(System.currentTimeMillis()).toString(); }
 
-    public boolean getIsSystemMessage() {
-        return isSystemMessage;
-    }
+    public String getChatId() { return chatId; }
 
-    public String getReceiver() {
-        return receiver;
-    }
-
-    public void setReceiver(String receiver) {
-        this.receiver = receiver;
-    }
-
-    public String getConversation_id() { return conversation_id; }
-
-    public void setConversation_id(String conversation_id) { this.conversation_id = conversation_id; }
+    public void setChatId(String chatId) { this.chatId = chatId; }
 }

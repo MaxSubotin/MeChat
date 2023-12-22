@@ -45,7 +45,7 @@ public class LoginSignupViewController {
     public void loginButtonOnClick() {
         // Get user info
         if (loginUsernameField.getText().isEmpty() || loginPasswordField.getText().isEmpty()) {
-            showAlertWithMessage(Alert.AlertType.WARNING, "Missing Info", "Please enter a username and a password.");
+            MainViewController.showAlertWithMessage(Alert.AlertType.WARNING, "Missing Info", "Please enter a username and a password.");
             return;
         }
 
@@ -63,13 +63,13 @@ public class LoginSignupViewController {
         // Check that the username and password are in a correct format like length, special characters and the like
         if (!(RegexChecker.isValidUsername(username) && RegexChecker.isValidPassword(signupPasswordField.getText()))) {
             // Show and error message
-            showAlertWithMessage(Alert.AlertType.ERROR,"Error", "The username or password are incorrect.\nUsername: 1 lower case letter, 1 upper case letter, 1 number, no special character, up-to 12 characters long. \nPassword: 1 lower case letter, 1 upper case letter, 1 number, can have special character, up-to 12 characters long.");
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR,"Error", "The username or password are incorrect.\nUsername: 1 lower case letter, 1 upper case letter, 1 number, no special character, up-to 12 characters long. \nPassword: 1 lower case letter, 1 upper case letter, 1 number, can have special character, up-to 12 characters long.");
             return;
         }
 
         // Check that the user has selected an avatar
         if (selectedUserImage == null) {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Error", "Please select an avatar.");
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Error", "Please select an avatar.");
             return;
         }
         else {
@@ -79,7 +79,7 @@ public class LoginSignupViewController {
 
         // Check that username is unique
         if (!Database.isUsernameUnique(username)) {
-            showAlertWithMessage(Alert.AlertType.ERROR, "Username Taken", "That username is already taken, try a different one.");
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, "Username Taken", "That username is already taken, try a different one.");
             return;
         }
 
@@ -189,7 +189,7 @@ public class LoginSignupViewController {
                     showMainView(mainScene);
                 } else {
                     primaryStage.setScene(loadLoginAndSignupView());
-                    showAlertWithMessage(Alert.AlertType.ERROR, errorMessage, errorMessage);
+                    MainViewController.showAlertWithMessage(Alert.AlertType.ERROR, errorMessage, errorMessage);
                 }
             }));
 
@@ -217,7 +217,7 @@ public class LoginSignupViewController {
 
     private void handleUserSignup(String hashedPassword, String userImageName) {
         handleUserAction(() -> {
-            String userId = IdGenerator.generateUniqueUserId();
+            String userId = IdGenerator.generateUniqueId();
             User user = new User(signupUsernameField.getText(), userId, userImageName);
 
             if (Database.addUserToDatabase(user.getName(), hashedPassword, user.getId(), user.getUserImageWithoutSuffix())) {
@@ -249,19 +249,11 @@ public class LoginSignupViewController {
         LVCR.MVCR.MyUser = user;
     }
 
-    public void showAlertWithMessage(Alert.AlertType type, String title, String errorMessage) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(errorMessage);
-        alert.showAndWait();
-    }
-
     private boolean showLoadingView() {
         Scene scene = loadLoadingView();
         // Create the loading view scene
         if (scene == null) {
-            showAlertWithMessage(Alert.AlertType.ERROR,"Error loading the loading scene", "Could not load the loading scene properly, try again later.");
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR,"Error loading the loading scene", "Could not load the loading scene properly, try again later.");
             return false;
         }
 
@@ -272,7 +264,7 @@ public class LoginSignupViewController {
 
     private void showMainView(Scene mainScene) {
         if (mainScene == null) {
-            showAlertWithMessage(Alert.AlertType.ERROR,"Error loading the main scene", "Could not load the main scene properly, try again later.");
+            MainViewController.showAlertWithMessage(Alert.AlertType.ERROR,"Error loading the main scene", "Could not load the main scene properly, try again later.");
             return;
         }
 
